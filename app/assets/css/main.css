@@ -1,0 +1,68 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.layout-enter-active,
+.layout-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.layout-enter-from,
+.layout-leave-to {
+  opacity: 0;
+}
+
+.fade-in {
+  animation: fadeIn 0.15s ease forwards;
+}
+
+.scale-in {
+  animation: scaleIn 0.15s ease forwards;
+}
+
+.form-panel {
+  animation: scaleIn 0.15s ease-out forwards;
+}
+
+.auth-title {
+  animation: fadeIn 0.15s ease-out forwards;
+}
+
+.auth-subtitle {
+  animation: fadeIn 0.15s ease-out forwards;
+}
+
+.form-field {
+  animation: fadeIn 0.1s ease-out forwards;
+  animation-delay: var(--delay, 0.03s);
+}
+
+.delay-1 { --delay: 0.03s; }
+.delay-2 { --delay: 0.06s; }
+.delay-3 { --delay: 0.09s; }
+.delay-4 { --delay: 0.12s; }

@@ -1,12 +1,89 @@
+const isDev = process.env.NODE_ENV !== 'production'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2024-11-01',
+  compatibilityDate: '2025-05-01',
   devtools: { enabled: true },
-
+  experimental: {
+    asyncContext: true
+  },
+  future: {
+    compatibilityVersion: 4,
+  },
+  build: {
+    transpile: ["@urql/vue"],
+  },
   modules: [
     '@nuxt/eslint',
     '@nuxt/icon',
     '@nuxt/image',
-    '@nuxt/test-utils'
-  ]
+    '@nuxt/test-utils',
+    // https://github.com/atinux/nuxt-auth-utils
+    'nuxt-auth-utils',
+    // https://nuxt-security.vercel.app/getting-started/usage
+    'nuxt-security',
+    '@nuxt/ui',
+    // '@josephanson/nuxt-ai',
+    // 'nuxt-i18n-micro'
+  ],
+  nitro: {
+    experimental: {
+      websocket: true
+    }
+  },
+  security: {
+    strict: !isDev,
+    headers: {
+    },
+    csrf: {
+      enabled: true,
+      addCsrfTokenToEventCtx: true,
+    },
+  },
+  routeRules: {
+  },
+  ui: {
+  },
+  app: {
+    pageTransition: { name: 'page', mode: 'out-in' },
+    layoutTransition: { name: 'layout', mode: 'out-in' }
+  },
+  css: ['~/assets/css/main.css'],
+  runtimeConfig: {
+    public: {
+      rootUrl: process.env.ROOT_URL || 'http://localhost:3000',
+    },
+    session: {
+      cookie: {
+        secure: !import.meta.dev,
+      },
+    },
+  },
+  i18n: {
+    locales: [
+      { code: 'en', iso: 'en-US', dir: 'ltr' },
+      { code: 'fi', iso: 'fi-FI', dir: 'ltr' },
+      { code: 'es', iso: 'es-ES', dir: 'ltr' },
+      { code: 'zh', iso: 'zh-CN', dir: 'ltr' },
+    ],
+    defaultLocale: 'en',
+    translationDir: 'locales',
+    meta: true,
+    autoDetectLanguage: true,
+    // strategy: 'no_prefix',
+  },
+  ai: {
+    dev: {
+      mcp: {
+        additionalDocs: {
+          'nuxt-18n-micro': {
+            url: 'github:s00d/nuxt-i18n-micro/tree/main/docs'
+          },
+        }
+
+      }
+    }
+
+  }
+
 })
