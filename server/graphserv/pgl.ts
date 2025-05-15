@@ -1,4 +1,10 @@
-import {preset} from "@/graphile.config" 
+import {getPreset} from "~~/server/graphile.config"
 import {postgraphile} from "postgraphile"
 
-export const pgl = postgraphile(preset)
+import { authPgPool, rootPgPool } from "../utils/pg"
+
+
+export const pgl = postgraphile(getPreset({
+  authPgPool,
+  rootPgPool,
+}))
