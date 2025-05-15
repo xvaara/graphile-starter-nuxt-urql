@@ -23,13 +23,13 @@ import RemoveQueryQueryPlugin from "./graphile/RemoveQueryQueryPlugin";
 import SubscriptionsPlugin from "./graphile/SubscriptionsPlugin";
 import handleErrors from "./utils/handleErrors";
 
-import type { Pool } from "pg";
 import { getUserSession } from '~~/node_modules/nuxt-auth-utils/dist/runtime/server/utils/session'
 
+import type { Pool } from "pg";
 
 interface IPostGraphileOptionsOptions {
-  authPgPool: Pool;
-  rootPgPool?: Pool;
+  authPgPool: InstanceType<typeof Pool>;
+  rootPgPool?: InstanceType<typeof Pool>;
 }
 
 // For configuration file details, see: https://postgraphile.org/postgraphile/next/config
@@ -38,10 +38,6 @@ const TagsFilePlugin = makePgSmartTagsFromFilePlugin(
   // todo make sure this works in build version
   resolve(`./db/tags.jsonc`)
 );
-
-
-
-
 
 type UUID = string;
 
