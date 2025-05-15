@@ -50,7 +50,7 @@ npm run setup
 npm run dev
 ```
 
-## Pleaso sponsor Benjie
+## Please sponsor Benjie
 
 ### [Click here to find out more about sponsors and sponsorship.](https://www.graphile.org/sponsor/)
 

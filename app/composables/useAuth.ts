@@ -39,7 +39,7 @@ export async function useAuth(refresh:boolean = false) {
   }
 
   function subscribe() {
-    useCurrentUserUpdatedSubscription({pause: computed(() => !user.value)}, )
+    useCurrentUserUpdatedSubscription({pause: computed(() => !user.value)})
   }
   async function logout() {
     return client
