@@ -37,7 +37,7 @@ aforementioned tutorial, but it's still an incredibly valuable resource.
 
 ## Status
 
-This starter uses the beta version of Graphile, is missing some features, no working tests and the components are created with AI agent converting from the original next.js ones and then fixed to work correctly.
+This starter uses the beta version of Graphile, it is missing some features, has no working tests and the components are created with AI agent converting from the original next.js ones and then fixed to work somewhat correctly.
 
 Use at your own risk. Probably not ready for production.
 
