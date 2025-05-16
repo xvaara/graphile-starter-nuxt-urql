@@ -13,6 +13,8 @@
     "bradlc.vscode-tailwindcss",
     "vitest.explorer",
     "antfu.vite",
-    "lokalise.i18n-ally"
+    "lokalise.i18n-ally",
+    "graphql.vscode-graphql-syntax",
+    "graphql.vscode-graphql"
   ]
 }
