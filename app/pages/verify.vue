@@ -9,7 +9,7 @@ const state = reactive({
   token: route.query.token as string || ''
 })
 
-const { executeMutation: verifyEmail, fetching: loading } = useVerifyEmailMutation()
+const { mutate: verifyEmail, loading } = useVerifyEmailMutation()
 const success = ref(false)
 
 const handleSubmit = async () => {

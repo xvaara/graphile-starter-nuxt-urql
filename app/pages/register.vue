@@ -5,7 +5,7 @@ definePageMeta({
 
 // TODO: Add a loading state
 const loading = ref(false)
-const { executeMutation: register } = useRegisterMutation()
+const { mutate: register } = useRegisterMutation()
 
 const router = useRouter()
 const toast = useToast()

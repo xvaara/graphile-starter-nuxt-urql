@@ -1,17 +1,15 @@
-const isDev = process.env.NODE_ENV !== 'production'
-
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-01',
   devtools: { enabled: true },
   experimental: {
-    asyncContext: true
+    asyncContext: true,
   },
   future: {
     compatibilityVersion: 4,
   },
   build: {
-    transpile: ["@urql/vue"],
+    transpile: [],
   },
   modules: [
     '@nuxt/eslint',
@@ -26,13 +24,19 @@ export default defineNuxtConfig({
     // '@josephanson/nuxt-ai',
     // 'nuxt-i18n-micro'
   ],
+  eslint: {
+    config: {
+      // stylistic: true,
+      standalone: false,
+    },
+  },
   nitro: {
     experimental: {
-      websocket: true
-    }
+      websocket: true,
+    },
   },
   security: {
-    strict: !isDev,
+    strict: !import.meta.dev,
     headers: {
     },
     csrf: {
@@ -46,12 +50,12 @@ export default defineNuxtConfig({
   },
   app: {
     pageTransition: { name: 'page', mode: 'out-in' },
-    layoutTransition: { name: 'layout', mode: 'out-in' }
+    layoutTransition: { name: 'layout', mode: 'out-in' },
   },
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
     public: {
-      rootUrl: process.env.ROOT_URL || 'http://localhost:3000',
+      rootUrl: import.meta.env.ROOT_URL || 'http://localhost:3000',
     },
     session: {
       cookie: {
@@ -59,31 +63,31 @@ export default defineNuxtConfig({
       },
     },
   },
-  i18n: {
-    locales: [
-      { code: 'en', iso: 'en-US', dir: 'ltr' },
-      { code: 'fi', iso: 'fi-FI', dir: 'ltr' },
-      { code: 'es', iso: 'es-ES', dir: 'ltr' },
-      { code: 'zh', iso: 'zh-CN', dir: 'ltr' },
-    ],
-    defaultLocale: 'en',
-    translationDir: 'locales',
-    meta: true,
-    autoDetectLanguage: true,
-    // strategy: 'no_prefix',
-  },
-  ai: {
-    dev: {
-      mcp: {
-        additionalDocs: {
-          'nuxt-18n-micro': {
-            url: 'github:s00d/nuxt-i18n-micro/tree/main/docs'
-          },
-        }
+  // i18n: {
+  //   locales: [
+  //     { code: 'en', iso: 'en-US', dir: 'ltr' },
+  //     { code: 'fi', iso: 'fi-FI', dir: 'ltr' },
+  //     { code: 'es', iso: 'es-ES', dir: 'ltr' },
+  //     { code: 'zh', iso: 'zh-CN', dir: 'ltr' },
+  //   ],
+  //   defaultLocale: 'en',
+  //   translationDir: 'locales',
+  //   meta: true,
+  //   autoDetectLanguage: true,
+  //   // strategy: 'no_prefix',
+  // },
+  // ai: {
+  //   dev: {
+  //     mcp: {
+  //       additionalDocs: {
+  //         'nuxt-18n-micro': {
+  //           url: 'github:s00d/nuxt-i18n-micro/tree/main/docs'
+  //         },
+  //       }
 
-      }
-    }
+  //     }
+  //   }
 
-  }
+  // }
 
 })

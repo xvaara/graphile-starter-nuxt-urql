@@ -1,3 +1,11 @@
+<script setup lang="ts">
+import { en } from '@nuxt/ui/locale'
+
+const { subscribe } = await useAuth()
+
+subscribe()
+</script>
+
 <template>
   <UApp :locale="en">
     <NuxtLayout>
@@ -6,11 +14,3 @@
     </NuxtLayout>
   </UApp>
 </template>
-<script setup lang="ts">
-import { en } from '@nuxt/ui/locale'
-
-const { subscribe } = await useAuth()
-
-subscribe()
-
-</script>

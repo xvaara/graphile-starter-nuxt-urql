@@ -7,10 +7,10 @@ const state = reactive({
   slug: '',
 })
 
-const { executeMutation: createOrganization, fetching: loading } = useCreateOrganizationMutation()
-const { executeQuery: lookupOrganizationBySlug, data: existingOrganizationData, fetching: slugLoading, error: slugError } = useOrganizationBySlugQuery({variables: { slug: () => state.slug }, pause: () => !state.slug })
+const { mutate: createOrganization, loading } = useCreateOrganizationMutation()
+const { load: lookupOrganizationBySlug, result: existingOrganizationData, loading: slugLoading, error: slugError } = useOrganizationBySlugLazyQuery({ slug: state.slug })
 const slugCheckIsValid = ref(false)
-const organization = ref<{ id: string; name: string; slug: string } | null>(null)
+const organization = ref<{ id: string, name: string, slug: string } | null>(null)
 const formError = ref<unknown>(null)
 
 watch(() => state.name, async (name) => {
@@ -20,42 +20,46 @@ watch(() => state.name, async (name) => {
   if (state.slug) {
     await lookupOrganizationBySlug()
     slugCheckIsValid.value = true
-  } else {
+  }
+  else {
     slugCheckIsValid.value = false
   }
 })
 
-const handleSubmit = async () => {
+async function handleSubmit() {
   formError.value = null
   try {
     const result = await createOrganization({ name: state.name, slug: state.slug })
-    if (result.data?.createOrganization?.organization) {
+    if (result?.data?.createOrganization?.organization) {
       organization.value = result.data.createOrganization.organization
       toast.add({
         title: 'Organization created',
         description: `Welcome to ${state.name}!`,
         icon: 'i-heroicons-check-circle',
-        color: 'success'
+        color: 'success',
       })
       setTimeout(() => {
-        if (organization.value) router.push(`/o/${organization.value.slug}`)
+        if (organization.value)
+          router.push(`/o/${organization.value.slug}`)
       }, 1000)
-    } else {
-      formError.value = result.error
+    }
+    else {
+      formError.value = result?.errors?.[0]
       toast.add({
         title: 'Creation failed',
-        description: result.error?.message || 'Unknown error',
+        description: result?.errors?.[0]?.message || 'Unknown error',
         icon: 'i-heroicons-exclamation-circle',
-        color: 'error'
+        color: 'error',
       })
     }
-  } catch (e) {
+  }
+  catch (e) {
     formError.value = e
     toast.add({
       title: 'An error occurred',
       description: e instanceof Error ? e.message : String(e),
       icon: 'i-heroicons-exclamation-circle',
-      color: 'error'
+      color: 'error',
     })
   }
 }
@@ -65,8 +69,12 @@ const handleSubmit = async () => {
   <div class="w-full max-w-md mx-auto">
     <UCard>
       <template #header>
-        <h1 class="text-2xl font-bold text-center">Create Organization</h1>
-        <p class="text-gray-500 text-center mt-2">Start a new organization</p>
+        <h1 class="text-2xl font-bold text-center">
+          Create Organization
+        </h1>
+        <p class="text-gray-500 text-center mt-2">
+          Start a new organization
+        </p>
       </template>
       <UForm :state="state" class="space-y-4" @submit="handleSubmit">
         <UFormField label="Name" name="name">
@@ -87,7 +95,9 @@ const handleSubmit = async () => {
           </div>
         </div>
         <UAlert v-if="formError" color="error" class="mt-2">
-          <template #title>Creating organization failed</template>
+          <template #title>
+            Creating organization failed
+          </template>
           <span>
             {{ typeof formError === 'object' && formError && 'message' in formError ? formError.message : String(formError) }}
           </span>

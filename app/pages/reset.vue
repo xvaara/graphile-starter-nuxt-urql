@@ -12,7 +12,7 @@ const state = reactive({
   confirm: ''
 })
 
-const { executeMutation: resetPassword, fetching: loading } = useResetPasswordMutation()
+const { mutate: resetPassword, loading } = useResetPasswordMutation()
 const success = ref(false)
 
 const passwordsMatch = computed(() => state.password && state.password === state.confirm)

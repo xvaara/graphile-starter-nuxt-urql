@@ -1,14 +1,14 @@
 <script setup lang="ts">
 definePageMeta({ public: false })
 
-const { fetching: loading, error } = await useSettingsPasswordQuery()
+const { loading, error } = await useSettingsPasswordQuery()
 const oldPassword = ref('')
 const newPassword = ref('')
 const changeError = ref('')
 const changeSuccess = ref(false)
 const changing = ref(false)
 
-const { executeMutation: changePasswordMutation } = useChangePasswordMutation()
+const { mutate: changePasswordMutation } = useChangePasswordMutation()
 const changePassword = async () => {
   changeError.value = ''
   changeSuccess.value = false

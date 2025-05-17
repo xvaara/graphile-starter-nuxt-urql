@@ -24,9 +24,9 @@ async function doIt() {
   error.value = null
   doingIt.value = true
   try {
-    const { executeMutation } = requestAccountDeletion
+    const { mutate } = requestAccountDeletion
 
-    const result = await executeMutation({})
+    const result = await mutate({})
 
     if (!result?.data?.requestAccountDeletion?.success) throw new Error('Requesting deletion failed')
     itIsDone.value = true
@@ -43,8 +43,8 @@ async function confirmDeletion() {
   error.value = null
   deleting.value = true
   try {
-    const { executeMutation } = confirmAccountDeletion
-    const result = await executeMutation({ token: token.value })
+    const { mutate } = confirmAccountDeletion
+    const result = await mutate({ token: token.value })
 
     if (!result?.data?.confirmAccountDeletion?.success) throw new Error('Account deletion failed')
     deleted.value = true

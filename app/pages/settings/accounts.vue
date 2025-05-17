@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePageMeta({ public: false })
 
-const { data, fetching: loading, error } = await useCurrentUserAuthenticationsQuery()
+const { data, loading, error } = await useCurrentUserAuthenticationsQuery()
 const modalOpen = ref(false)
 const deleting = ref(false)
 const selectedId = ref<string | null>(null)
@@ -14,7 +14,7 @@ function closeModal() {
   modalOpen.value = false
   selectedId.value = null
 }
-const { executeMutation: unlinkUserAuthenticationMutation } = useUnlinkUserAuthenticationMutation()
+const { mutate: unlinkUserAuthenticationMutation } = useUnlinkUserAuthenticationMutation()
 async function handleUnlink() {
   if (!selectedId.value) return
   deleting.value = true

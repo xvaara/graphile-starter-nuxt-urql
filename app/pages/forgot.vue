@@ -3,10 +3,10 @@ definePageMeta({ layout: 'auth', public: true })
 
 const toast = useToast()
 const state = reactive({ email: '' })
-const { executeMutation: forgotPassword, fetching: loading } = useForgotPasswordMutation()
+const { mutate: forgotPassword, loading } = useForgotPasswordMutation()
 const success = ref(false)
 
-const handleSubmit = async () => {
+async function handleSubmit() {
   try {
     const result = await forgotPassword({ email: state.email })
     if (!result.error) {
@@ -15,22 +15,24 @@ const handleSubmit = async () => {
         title: 'Check your email',
         description: `We've sent a password reset link to ${state.email}.`,
         icon: 'i-heroicons-envelope',
-        color: 'success'
+        color: 'success',
       })
-    } else {
+    }
+    else {
       toast.add({
         title: 'Request failed',
         description: result.error.message,
         icon: 'i-heroicons-exclamation-circle',
-        color: 'error'
+        color: 'error',
       })
     }
-  } catch (e: Error | unknown) {
+  }
+  catch (e: Error | unknown) {
     toast.add({
       title: 'An error occurred',
       description: e instanceof Error ? e.message : String(e),
       icon: 'i-heroicons-exclamation-circle',
-      color: 'error'
+      color: 'error',
     })
   }
 }
@@ -40,8 +42,12 @@ const handleSubmit = async () => {
   <div class="w-full max-w-md mx-auto">
     <UCard>
       <template #header>
-        <h1 class="text-2xl font-bold text-center">Forgot Password</h1>
-        <p class="text-gray-500 text-center mt-2">Enter your email to receive a reset link</p>
+        <h1 class="text-2xl font-bold text-center">
+          Forgot Password
+        </h1>
+        <p class="text-gray-500 text-center mt-2">
+          Enter your email to receive a reset link
+        </p>
       </template>
       <UForm :state="state" class="space-y-4" @submit="handleSubmit">
         <UFormField label="Email" name="email">

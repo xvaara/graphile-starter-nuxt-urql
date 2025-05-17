@@ -1,65 +1,66 @@
+import type { Pool } from 'pg'
+import { ServerResponse } from 'node:http'
+// import { PersistedPlugin } from "@grafserv/persisted";
+// import { PgOmitArchivedPlugin } from "@graphile-contrib/pg-omit-archived";
+import { resolve } from 'node:path'
 // @ts-check
-import { makePgService } from "@dataplan/pg/adaptors/pg";
-import { PostGraphileAmberPreset} from "postgraphile/presets/amber";
-import { makeV4Preset } from "postgraphile/presets/v4";
-import { makePgSmartTagsFromFilePlugin } from "postgraphile/utils";
+import { makePgService } from '@dataplan/pg/adaptors/pg'
 // import { PostGraphileConnectionFilterPreset } from "postgraphile-plugin-connection-filter";
 // import { PgAggregatesPreset } from "@graphile/pg-aggregates";
 // import { PgManyToManyPreset } from "@graphile-contrib/pg-many-to-many";
-import { PgSimplifyInflectionPreset } from "@graphile/simplify-inflection";
-// import { PersistedPlugin } from "@grafserv/persisted";
-// import { PgOmitArchivedPlugin } from "@graphile-contrib/pg-omit-archived";
-import { resolve } from "path";
-import { NodePlugin } from "graphile-build";
+import { PgSimplifyInflectionPreset } from '@graphile/simplify-inflection'
+import { NodePlugin } from 'graphile-build'
+import { H3Event } from 'h3'
 
-import { H3Event } from "h3";
+import { PostGraphileAmberPreset } from 'postgraphile/presets/amber'
 
-import { ServerResponse, } from "node:http";
+import { makeV4Preset } from 'postgraphile/presets/v4'
 
-import OrdersPlugin from "./graphile/Orders";
-import LoginPlugin from "./graphile/LoginPlugin";
-import PrimaryKeyMutationsOnlyPlugin from "./graphile/PrimaryKeyMutationsOnlyPlugin";
-import RemoveQueryQueryPlugin from "./graphile/RemoveQueryQueryPlugin";
-import SubscriptionsPlugin from "./graphile/SubscriptionsPlugin";
-import handleErrors from "./utils/handleErrors";
-
+import { makePgSmartTagsFromFilePlugin } from 'postgraphile/utils'
 import { getUserSession } from '~~/node_modules/nuxt-auth-utils/dist/runtime/server/utils/session'
+import LoginPlugin from './graphile/LoginPlugin'
+import OrdersPlugin from './graphile/Orders'
+import PrimaryKeyMutationsOnlyPlugin from './graphile/PrimaryKeyMutationsOnlyPlugin'
+import RemoveQueryQueryPlugin from './graphile/RemoveQueryQueryPlugin'
 
-import type { Pool } from "pg";
+import SubscriptionsPlugin from './graphile/SubscriptionsPlugin'
+
+import handleErrors from './utils/handleErrors'
 
 interface IPostGraphileOptionsOptions {
-  authPgPool: InstanceType<typeof Pool>;
-  rootPgPool?: InstanceType<typeof Pool>;
+  authPgPool: InstanceType<typeof Pool>
+  rootPgPool?: InstanceType<typeof Pool>
 }
 
 // For configuration file details, see: https://postgraphile.org/postgraphile/next/config
 
 const TagsFilePlugin = makePgSmartTagsFromFilePlugin(
   // todo make sure this works in build version
-  resolve(`./db/tags.jsonc`)
-);
+  resolve(`./db/tags.jsonc`),
+)
 
-type UUID = string;
+type UUID = string
 
-const isTest = process.env.NODE_ENV === "test";
+const isTest = process.env.NODE_ENV === 'test'
 
 function uuidOrNull(input: string | number | null | undefined): UUID | null {
-  if (!input) return null;
-  const str = String(input);
+  if (!input)
+    return null
+  const str = String(input)
   if (
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      str
+      str,
     )
   ) {
-    return str;
-  } else {
-    return null;
+    return str
+  }
+  else {
+    return null
   }
 }
 
-const isDev = process.env.NODE_ENV === "development";
-//const isTest = process.env.NODE_ENV === "test";
-
+const isDev = process.env.NODE_ENV === 'development'
+// const isTest = process.env.NODE_ENV === "test";
 
 export function getPreset({
   authPgPool,
@@ -73,7 +74,7 @@ export function getPreset({
 
         pool: authPgPool,
 
-        schemas: ["app_public"],
+        schemas: ['app_public'],
 
         // Enable LISTEN/NOTIFY (for subscriptions/watch mode)
         pubsub: true,
@@ -197,8 +198,6 @@ export function getPreset({
           pgStrictFunctions: true,
         },
 
-
-
         // Pro plugin options (requires process.env.GRAPHILE_LICENSE)
         // TODO: defaultPaginationCap: parseInt(process.env.GRAPHQL_PAGINATION_CAP || "", 10) || 50,
         // TODO: graphqlDepthLimit: parseInt(process.env.GRAPHQL_DEPTH_LIMIT || "", 10) || 12,
@@ -215,12 +214,12 @@ export function getPreset({
       websockets: true,
       // allowUnpersistedOperation: true,
       watch: true,
-      graphqlPath: "/api/graphql",
-      eventStreamPath: "/api/graphql/stream",
+      graphqlPath: '/api/graphql',
+      eventStreamPath: '/api/graphql/stream',
     },
     grafast: {
       explain: true,
-        /*
+      /*
          * These properties are merged into context (the third argument to GraphQL
          * resolvers). This is useful if you write your own plugins that need
          * access to, e.g., the logged in user.
@@ -228,34 +227,31 @@ export function getPreset({
       async context(ctx) {
         // console.log("context", ctx);
         // @ts-expect-error ws in context
-        const event = ctx.event ?? ctx.h3v1?.event ?? new H3Event(ctx.ws.request._req, new ServerResponse(ctx.ws.request)); // <=== ctx.ws is provided by makeWsHandler: open hook !
+        const event = ctx.event ?? ctx.h3v1?.event ?? new H3Event(ctx.ws.request._req, new ServerResponse(ctx.ws.request)) // <=== ctx.ws is provided by makeWsHandler: open hook !
         // console.log("event", event);
         if (!event) {
-          throw new Error("No event");
+          throw new Error('No event')
         }
-        const session = await getUserSession(event);
+        const session = await getUserSession(event)
         // console.log("session", session);
         const sessionId = uuidOrNull(session.secure?.session_id)
 
-          // console.log("sessionId", sessionId);
-            if (sessionId) {
-              // Update the last_active timestamp (but only do it at most once every 15 seconds to avoid too much churn).
-              await rootPgPool?.query(
-                "UPDATE app_private.sessions SET last_active = NOW() WHERE uuid = $1 AND last_active < NOW() - INTERVAL '15 seconds'",
-                [sessionId]
-              );
-            }
+        // console.log("sessionId", sessionId);
+        if (sessionId) {
+          // Update the last_active timestamp (but only do it at most once every 15 seconds to avoid too much churn).
+          await rootPgPool?.query(
+            'UPDATE app_private.sessions SET last_active = NOW() WHERE uuid = $1 AND last_active < NOW() - INTERVAL \'15 seconds\'',
+            [sessionId],
+          )
+        }
 
         return {
           sessionId: uuidOrNull(session.secure?.session_id),
           rootPgPool,
           login: (userSession: typeof session) =>
-            setUserSession(event,
-              userSession
-            ),
+            setUserSession(event, userSession),
           logout: () =>
-            clearUserSession(event)
-          ,
+            clearUserSession(event),
           /*
           * Postgres transaction settings for each GraphQL query/mutation to
           * indicate to Postgres who is attempting to access the resources. These
@@ -271,84 +267,25 @@ export function getPreset({
           * whether or not you're using JWTs.
           */
           pgSettings: {
-              // Everyone uses the "visitor" role currently
-              role: process.env.DATABASE_VISITOR,
+            // Everyone uses the "visitor" role currently
+            'role': process.env.DATABASE_VISITOR,
 
-              /*
+            /*
               * Note, though this says "jwt" it's not actually anything to do with
               * JWTs, we just know it's a safe namespace to use, and it means you
               * can use JWTs too, if you like, and they'll use the same settings
               * names reducing the amount of code you need to write.
               */
-              "jwt.claims.session_id": sessionId ?? undefined,
+            'jwt.claims.session_id': sessionId ?? undefined,
 
           },
-        };
-
+        }
       },
     },
-    ruru: {endpoint: "/api/ruru"}
-  };
-  return preset;
+    ruru: { endpoint: '/api/ruru' },
+  }
+  return preset
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // /** @satisfies {GraphileConfig.Preset} */
 // export const presetOrg = {

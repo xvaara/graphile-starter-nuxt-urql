@@ -1,12 +1,12 @@
 <script setup lang="ts">
 definePageMeta({ public: false })
 
-const { data, fetching: loading, error } = await useSettingsEmailsQuery()
+const { data, loading, error } = await useSettingsEmailsQuery()
 const showAddEmailForm = ref(false)
 const newEmail = ref('')
 const addEmailError = ref('')
 
-const { executeMutation: addEmailMutation } = useAddEmailMutation()
+const { mutate: addEmailMutation } = useAddEmailMutation()
 const addEmail = async () => {
   addEmailError.value = ''
   try {
@@ -17,15 +17,15 @@ const addEmail = async () => {
     addEmailError.value = e instanceof Error ? e.message : String(e)
   }
 }
-const { executeMutation: deleteEmailMutation } = useDeleteEmailMutation()
+const { mutate: deleteEmailMutation } = useDeleteEmailMutation()
 const deleteEmail = async (id: string) => {
   await deleteEmailMutation({ emailId: id })
 }
-const { executeMutation: makePrimaryMutation } = useMakeEmailPrimaryMutation()
+const { mutate: makePrimaryMutation } = useMakeEmailPrimaryMutation()
 const makePrimary = async (id: string) => {
   await makePrimaryMutation({ emailId: id })
 }
-const { executeMutation: resendVerificationMutation } = useResendEmailVerificationMutation()
+const { mutate: resendVerificationMutation } = useResendEmailVerificationMutation()
 const resendVerification = async (id: string) => {
   await resendVerificationMutation({ emailId: id })
 }

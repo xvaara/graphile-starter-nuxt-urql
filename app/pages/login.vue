@@ -9,7 +9,7 @@ const route = useRoute()
 
 const state = reactive({
   email: '',
-  password: ''
+  password: '',
 })
 
 // Get returnTo from query and validate it's internal
@@ -19,13 +19,13 @@ const returnTo = computed(() => {
   return to?.startsWith('/') ? to : '/'
 })
 
-const { executeMutation: login, fetching: loading } = useLoginMutation()
+const { mutate: login, loading } = useLoginMutation()
 
-const handleSubmit = async () => {
+async function handleSubmit() {
   try {
     const result = await login({
       username: state.username,
-      password: state.password
+      password: state.password,
     })
     // console.log('Login result:', result)
     if (result.data.login?.user) {
@@ -33,39 +33,43 @@ const handleSubmit = async () => {
         title: 'Logged in successfully',
         description: `Welcome back, ${result.data.login.user.name}!`,
         icon: 'i-heroicons-check-circle',
-        color: 'green'
+        color: 'green',
       })
       await useAuth(true)
       navigateTo(returnTo.value)
-    } else {
+    }
+    else {
       toast.add({
         title: 'Login failed',
         description: result.error?.message || 'Invalid credentials',
         icon: 'i-heroicons-exclamation-circle',
-        color: 'red'
+        color: 'red',
       })
     }
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Login error:', e)
     const code = getCodeFromError(e)
     toast.add({
       title: 'An error occurred',
       description: `Please try again later. Error code: ${code}`,
       icon: 'i-heroicons-exclamation-circle',
-      color: 'red'
+      color: 'red',
     })
   }
 }
-
-
 </script>
 
 <template>
   <div class="w-full max-w-md mx-auto">
     <UCard>
       <template #header>
-        <h1 class="text-2xl font-bold text-center">Welcome Back</h1>
-        <p class="text-gray-500 text-center mt-2">Sign in to your account</p>
+        <h1 class="text-2xl font-bold text-center">
+          Welcome Back
+        </h1>
+        <p class="text-gray-500 text-center mt-2">
+          Sign in to your account
+        </p>
       </template>
 
       <UForm :state="state" class="space-y-4" @submit="handleSubmit">
@@ -110,8 +114,8 @@ const handleSubmit = async () => {
           color="primary"
           block
           :loading="loading"
-          >
-            {{ loading ? 'Signing in...' : 'Sign In' }}
+        >
+          {{ loading ? 'Signing in...' : 'Sign In' }}
         </UButton>
       </UForm>
 

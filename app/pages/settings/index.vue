@@ -10,7 +10,7 @@ const form = reactive({
   username: user.value?.username || ''
 })
 
-const { executeMutation: updateProfile, error } = useUpdateUserMutation()
+const { mutate: updateProfile, error } = useUpdateUserMutation()
 
 async function handleSubmit() {
   try {
