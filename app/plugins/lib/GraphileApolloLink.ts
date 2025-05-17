@@ -1,4 +1,5 @@
 import type {
+  DocumentNode,
   FetchResult,
   NextLink,
   Operation,
@@ -10,7 +11,7 @@ import {
   Observable,
 } from '@apollo/client'
 import { execute, hookArgs, isAsyncIterable } from 'grafast'
-import { getOperationAST } from 'graphql'
+import { getOperationAST, parse, print } from 'graphql'
 
 export interface GraphileApolloLinkInterface {
   /** The event object. */
@@ -18,6 +19,21 @@ export interface GraphileApolloLinkInterface {
 
   /** The instance of the express middleware returned by calling `postgraphile()` */
   pgl: PostGraphileInstance
+}
+
+// TODO: This is a hack
+// https://discord.com/channels/489127045289476126/498852330754801666/1373200934150344724
+
+const cache = new Map<string, DocumentNode>()
+function cachedParse(text: string) {
+  if (cache.has(text)) {
+    return cache.get(text) as DocumentNode
+  }
+  else {
+    const doc = parse(text)
+    cache.set(text, doc)
+    return doc
+  }
 }
 
 /**
@@ -40,8 +56,9 @@ export class GraphileApolloLink extends ApolloLink {
           const {
             operationName,
             variables: variableValues,
-            query: document,
+            // query: document,
           } = operation
+          const document = cachedParse(print(operation.query))
           const op = getOperationAST(document, operationName)
           if (!op || op.operation !== 'query') {
             if (!observer.closed) {
