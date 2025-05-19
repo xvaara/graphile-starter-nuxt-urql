@@ -6,40 +6,42 @@ const toast = useToast()
 
 const state = reactive({
   id: route.query.id as string || '',
-  token: route.query.token as string || ''
+  token: route.query.token as string || '',
 })
 
 const { mutate: verifyEmail, loading } = useVerifyEmailMutation()
 const success = ref(false)
 
-const handleSubmit = async () => {
+async function handleSubmit() {
   try {
     const result = await verifyEmail({ id: state.id, token: state.token })
-    if (result.data?.verifyEmail?.success) {
+    if (result && result.data?.verifyEmail?.success) {
       success.value = true
       toast.add({
         title: 'Email verified',
         description: 'Your email has been verified.',
         icon: 'i-heroicons-check-circle',
-        color: 'success'
+        color: 'success',
       })
       setTimeout(() => {
         navigateTo('/')
       }, 3000)
-    } else {
+    }
+    else {
       toast.add({
         title: 'Verification failed',
-        description: result.error?.message || 'Invalid or expired token.',
+        description: result?.errors?.[0]?.message || 'Invalid or expired token.',
         icon: 'i-heroicons-exclamation-circle',
-        color: 'error'
+        color: 'error',
       })
     }
-  } catch (e) {
+  }
+  catch (e) {
     toast.add({
       title: 'An error occurred',
       description: e instanceof Error ? e.message : String(e),
       icon: 'i-heroicons-exclamation-circle',
-      color: 'error'
+      color: 'error',
     })
   }
 }
@@ -49,8 +51,12 @@ const handleSubmit = async () => {
   <div class="w-full max-w-md mx-auto">
     <UCard>
       <template #header>
-        <h1 class="text-2xl font-bold text-center">Verify Email</h1>
-        <p class="text-gray-500 text-center mt-2">Enter your verification code</p>
+        <h1 class="text-2xl font-bold text-center">
+          Verify Email
+        </h1>
+        <p class="text-gray-500 text-center mt-2">
+          Enter your verification code
+        </p>
       </template>
       <UForm :state="state" class="space-y-4" @submit="handleSubmit">
         <UFormField label="Verification Token" name="token">

@@ -24,14 +24,14 @@ export interface GraphileApolloLinkInterface {
 // TODO: This is a hack
 // https://discord.com/channels/489127045289476126/498852330754801666/1373200934150344724
 
-const cache = new Map<string, DocumentNode>()
+const cache: Record<string, DocumentNode> = {}
 function cachedParse(text: string) {
-  if (cache.has(text)) {
-    return cache.get(text) as DocumentNode
+  if (cache[text]) {
+    return cache[text]
   }
   else {
     const doc = parse(text)
-    cache.set(text, doc)
+    cache[text] = doc
     return doc
   }
 }

@@ -1,13 +1,13 @@
 <script setup lang="ts">
-const { user } = await useAuth()
+const { user } = await useAsyncAuth()
 
 definePageMeta({
-  name: 'Settings-profile-index'
+  name: 'Settings-profile-index',
 })
 
 const form = reactive({
   name: user.value?.name || '',
-  username: user.value?.username || ''
+  username: user.value?.username || '',
 })
 
 const { mutate: updateProfile, error } = useUpdateUserMutation()
@@ -18,17 +18,18 @@ async function handleSubmit() {
       id: user.value?.id,
       patch: {
         name: form.name,
-        username: form.username
-      }
+        username: form.username,
+      },
     })
     const toast = useToast()
     toast.add({
       title: 'Profile Updated',
       description: 'Your profile has been successfully updated',
       icon: 'i-heroicons-check-circle',
-      color: 'success'
+      color: 'success',
     })
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Error updating profile:', e)
   }
 }
@@ -36,7 +37,9 @@ async function handleSubmit() {
 
 <template>
   <div class="mt-8">
-    <h2 class="text-xl font-semibold mb-4">Edit Profile</h2>
+    <h2 class="text-xl font-semibold mb-4">
+      Edit Profile
+    </h2>
 
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <UFormField label="Name" name="name">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { user, isAuthenticated } = await useAuth()
+const { user, isAuthenticated } = useAuth()
 
 // Composables for email verification status if needed
 const _hasUnverifiedEmail = computed(() => user.value?.isVerified === false)
@@ -44,37 +44,53 @@ const _hasUnverifiedEmail = computed(() => user.value?.isVerified === false)
               class="mb-8"
             />
 
-            <h2 class="text-2xl font-semibold mt-8 mb-4">Development Mode Notes</h2>
+            <h2 class="text-2xl font-semibold mt-8 mb-4">
+              Development Mode Notes
+            </h2>
             <div class="space-y-6">
               <div>
-                <h3 class="text-xl font-medium mb-2">Page Load Times in Development</h3>
+                <h3 class="text-xl font-medium mb-2">
+                  Page Load Times in Development
+                </h3>
                 <p>
                   In development mode, initial page loads might take longer due to on-demand compilation. This delay is significantly reduced in production builds with proper optimization and pre-fetching.
                 </p>
               </div>
 
               <div>
-                <h3 class="text-xl font-medium mb-2">Email Handling</h3>
+                <h3 class="text-xl font-medium mb-2">
+                  Email Handling
+                </h3>
                 <p>
                   During development, emails are not sent to real addresses. Instead, they are captured by
-                  <ULink href="http://ethereal.email" external>ethereal.email</ULink>.
+                  <ULink href="http://ethereal.email" external>
+                    ethereal.email
+                  </ULink>.
                   Check your terminal for preview URLs when emails are triggered.
                 </p>
               </div>
 
               <div>
-                <h3 class="text-xl font-medium mb-2">GraphQL Playground</h3>
+                <h3 class="text-xl font-medium mb-2">
+                  GraphQL Playground
+                </h3>
                 <p>
                   Explore and test the GraphQL API using the built-in playground at
-                  <ULink href="/api/ruru" external>GraphQL Playground</ULink>.
+                  <ULink href="/api/ruru" external>
+                    GraphQL Playground
+                  </ULink>.
                 </p>
               </div>
             </div>
 
-            <h2 class="text-2xl font-semibold mt-12 mb-4">Getting Started</h2>
+            <h2 class="text-2xl font-semibold mt-12 mb-4">
+              Getting Started
+            </h2>
             <div class="space-y-6">
               <div>
-                <h3 class="text-xl font-medium mb-2">Database Migrations</h3>
+                <h3 class="text-xl font-medium mb-2">
+                  Database Migrations
+                </h3>
                 <p>
                   We use <code>graphile-migrate</code> for database management. The initial migration sets up the user system.
                   To customize it, run <code>yarn db uncommit</code> to move its content to current.sql.
@@ -82,7 +98,9 @@ const _hasUnverifiedEmail = computed(() => user.value?.isVerified === false)
               </div>
 
               <div>
-                <h3 class="text-xl font-medium mb-2">Next Steps</h3>
+                <h3 class="text-xl font-medium mb-2">
+                  Next Steps
+                </h3>
                 <ul class="mt-4 space-y-2 list-disc pl-4">
                   <li>Click "Sign In" above to create a new account</li>
                   <li>Explore the GraphQL Playground to understand the API</li>
@@ -92,10 +110,14 @@ const _hasUnverifiedEmail = computed(() => user.value?.isVerified === false)
               </div>
             </div>
 
-            <h2 class="text-2xl font-semibold mt-12 mb-4">Production Considerations</h2>
+            <h2 class="text-2xl font-semibold mt-12 mb-4">
+              Production Considerations
+            </h2>
             <div class="space-y-6">
               <div>
-                <h3 class="text-xl font-medium mb-2">Security</h3>
+                <h3 class="text-xl font-medium mb-2">
+                  Security
+                </h3>
                 <p>
                   Before deploying to production, ensure you've implemented proper security measures:
                 </p>
@@ -108,7 +130,9 @@ const _hasUnverifiedEmail = computed(() => user.value?.isVerified === false)
               </div>
 
               <div>
-                <h3 class="text-xl font-medium mb-2">Email Configuration</h3>
+                <h3 class="text-xl font-medium mb-2">
+                  Email Configuration
+                </h3>
                 <p>
                   The project is configured to use Amazon SES in production. You'll need to set up the appropriate credentials
                   and environment variables.
@@ -121,7 +145,9 @@ const _hasUnverifiedEmail = computed(() => user.value?.isVerified === false)
         <div class="lg:col-span-1">
           <UCard>
             <template #header>
-              <h3 class="text-xl font-semibold">Support the Project</h3>
+              <h3 class="text-xl font-semibold">
+                Support the Project
+              </h3>
             </template>
 
             <div class="space-y-4">
@@ -147,18 +173,26 @@ const _hasUnverifiedEmail = computed(() => user.value?.isVerified === false)
 
           <UCard class="mt-6">
             <template #header>
-              <h3 class="text-xl font-semibold">Quick Links</h3>
+              <h3 class="text-xl font-semibold">
+                Quick Links
+              </h3>
             </template>
 
             <ul class="space-y-2">
               <li>
-                <ULink href="/docs">Documentation</ULink>
+                <ULink href="/docs" external>
+                  Documentation
+                </ULink>
               </li>
               <li>
-                <ULink href="/api/ruru">GraphQL Playground</ULink>
+                <ULink href="/api/ruru" external>
+                  GraphQL Playground
+                </ULink>
               </li>
               <li>
-                <ULink href="https://github.com/xvaara/project" external>GitHub Repository</ULink>
+                <ULink href="https://github.com/xvaara/project" external>
+                  GitHub Repository
+                </ULink>
               </li>
             </ul>
           </UCard>

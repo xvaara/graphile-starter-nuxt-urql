@@ -17,6 +17,7 @@ import { PostGraphileAmberPreset } from 'postgraphile/presets/amber'
 import { makeV4Preset } from 'postgraphile/presets/v4'
 
 import { makePgSmartTagsFromFilePlugin } from 'postgraphile/utils'
+// eslint-disable-next-line antfu/no-import-node-modules-by-path
 import { getUserSession } from '~~/node_modules/nuxt-auth-utils/dist/runtime/server/utils/session'
 import LoginPlugin from './graphile/LoginPlugin'
 import OrdersPlugin from './graphile/Orders'
@@ -282,7 +283,9 @@ export function getPreset({
         }
       },
     },
-    ruru: { endpoint: '/api/ruru' },
+    ruru: {
+      endpoint: '/api/ruru',
+    },
   }
   return preset
 }

@@ -1,13 +1,13 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  const { isAuthenticated } = await useAuth()
+  const { isAuthenticated } = await useAsyncAuth()
 
   // If not authenticated and trying to access a protected route
   if (!isAuthenticated.value && (!['/', '/login', '/register'].includes(to.path)) && !to.meta.public) {
     return navigateTo({
       path: '/login',
       query: {
-        returnTo: to.fullPath
-      }
+        returnTo: to.fullPath,
+      },
     })
   }
 

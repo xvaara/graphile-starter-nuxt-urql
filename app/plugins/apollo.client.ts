@@ -1,7 +1,8 @@
 import type { NormalizedCacheObject } from '@apollo/client/core'
+import type { Client as WSClient } from 'graphql-ws'
 import { ApolloClient, createHttpLink, InMemoryCache, split } from '@apollo/client/core'
-import { onError } from '@apollo/client/link/error'
 
+import { onError } from '@apollo/client/link/error'
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
 import { getMainDefinition } from '@apollo/client/utilities'
 import { DefaultApolloClient } from '@vue/apollo-composable'
@@ -15,7 +16,13 @@ export default defineNuxtPlugin((nuxt) => {
   const rootUrl = useRuntimeConfig().public.rootUrl || 'http://localhost:3000'
 
   // Cache implementation
-  const cache = new InMemoryCache()
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        queryType: true,
+      },
+    },
+  })
 
   // when app is created in browser, restore SSR state from nuxt payload
   if (import.meta.client) {
@@ -42,8 +49,7 @@ export default defineNuxtPlugin((nuxt) => {
       'csrf-token': csrf,
     },
   })
-
-  const wsLink = new GraphQLWsLink(createWSClient({
+  const wsClient = createWSClient({
     url: `${rootUrl}/api/graphql/ws`,
     connectionParams: {
       headers: {
@@ -51,15 +57,16 @@ export default defineNuxtPlugin((nuxt) => {
         'csrf-token': csrf,
       },
     },
-  }))
+  })
+  const wsLink = new GraphQLWsLink(wsClient)
 
   const splitLink = split(
     ({ query }) => {
       const definition = getMainDefinition(query)
-      if (definition.kind === 'OperationDefinition'
-        && definition.operation === 'subscription') {
-        console.log(`Subscribing to ${definition.name?.value ?? 'anonymous'}`)
-      }
+      // if (definition.kind === 'OperationDefinition'
+      //   && definition.operation === 'subscription') {
+      //   console.log(`Subscribing to ${definition.name?.value ?? 'anonymous'}`)
+      // }
       return (
         definition.kind === 'OperationDefinition'
         && definition.operation === 'subscription'
@@ -70,22 +77,27 @@ export default defineNuxtPlugin((nuxt) => {
   )
 
   // Handle errors
-  // const errorLink = onError((error) => {
-  //   logErrorMessages(error)
-  // })
+  const errorLink = onError((error) => {
+    logErrorMessages(error)
+  })
 
   const apolloClient = new ApolloClient({
     cache,
-    // link: errorLink.concat(splitLink),
-    link: splitLink,
+    link: errorLink.concat(splitLink),
+    connectToDevTools: true,
+    devtools: {
+      enabled: true,
+    },
   })
 
   nuxt.provide('apollo', apolloClient)
+  nuxt.provide('apolloWSClient', wsClient)
   vueApp.provide(DefaultApolloClient, apolloClient)
 })
 
 declare module '#app' {
   interface NuxtApp {
     $apollo: ApolloClient<NormalizedCacheObject>
+    $apolloWSClient: WSClient
   }
 }

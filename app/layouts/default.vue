@@ -1,14 +1,13 @@
 <script setup lang="ts">
 const colorMode = useColorMode()
-const toast = useToast()
 
-const {user, isAuthenticated, logout} = await useAuth()
+const { user, isAuthenticated, logout } = useAuth()
 
-const toggleDark = () => {
+function toggleDark() {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
 }
 
-const handleLogout = () => {
+function handleLogout() {
   logout()
 }
 </script>
@@ -46,52 +45,43 @@ const handleLogout = () => {
 
           <template v-if="isAuthenticated">
             <UDropdownMenu
-              :items="[[
-                {
-                  label: 'Create Organization',
-                  icon: 'i-heroicons-plus',
-                  to: '/create-organization'
-                },
-                ...(user?.organizationMemberships?.nodes || []).map(membership => ({
-                  label: membership.organization?.name,
-                  icon: 'i-heroicons-building-office',
-                  to: `/o/${membership.organization?.slug}`
-                })),
-              ],
-              [
-                {
-                  label: 'Settings',
-                  icon: 'i-heroicons-user-circle',
-                  to: '/settings'
-                },
-                { divider: true },
-                {
-                  label: 'Logout',
-                  icon: 'i-heroicons-arrow-right-on-rectangle',
-                  onSelect: handleLogout
-                }
-              ]]"
+              :items="[
+                [
+                  {
+                    label: 'Create Organization',
+                    icon: 'i-heroicons-plus',
+                    to: '/create-organization',
+                  },
+                  ...(user?.organizationMemberships?.nodes || []).map(membership => ({
+                    label: membership.organization?.name,
+                    icon: 'i-heroicons-building-office',
+                    to: `/o/${membership.organization?.slug}`,
+                  })),
+                ],
+                [
+                  {
+                    label: 'Settings',
+                    icon: 'i-heroicons-user-circle',
+                    to: '/settings',
+                  },
+                  { divider: true },
+                  {
+                    label: 'Logout',
+                    icon: 'i-heroicons-arrow-right-on-rectangle',
+                    onSelect: handleLogout,
+                  },
+                ],
+              ]"
             >
               <UButton
                 color="primary"
                 variant="soft"
-                class="hidden sm:flex"
                 icon="i-heroicons-user-circle"
                 trailing-icon="i-heroicons-chevron-down"
               >
-                {{ user?.name || user?.username }}
+                {{ user?.name }}
               </UButton>
             </UDropdownMenu>
-
-            <UButton
-              color="primary"
-              variant="ghost"
-              icon="i-heroicons-arrow-right-on-rectangle"
-              class="sm:hidden"
-              @click="handleLogout"
-            >
-              Logout
-            </UButton>
           </template>
         </div>
       </header>

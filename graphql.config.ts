@@ -1,4 +1,4 @@
 export default {
-  schema: "./data/schema.graphql",
-  documents: "graphql/**/*.graphql",
-};
+  schema: './data/schema.graphql',
+  documents: 'graphql/**/*.graphql',
+}

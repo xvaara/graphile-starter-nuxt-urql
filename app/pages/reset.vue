@@ -9,7 +9,7 @@ const state = reactive({
   userId: route.query.user_id as string || '',
   token: route.query.token as string || '',
   password: '',
-  confirm: ''
+  confirm: '',
 })
 
 const { mutate: resetPassword, loading } = useResetPasswordMutation()
@@ -17,41 +17,43 @@ const success = ref(false)
 
 const passwordsMatch = computed(() => state.password && state.password === state.confirm)
 
-const handleSubmit = async () => {
+async function handleSubmit() {
   if (!passwordsMatch.value) {
     toast.add({
       title: 'Passwords do not match',
       description: 'Please make sure your passwords match.',
       icon: 'i-heroicons-exclamation-circle',
-      color: 'error'
+      color: 'error',
     })
     return
   }
   try {
     const result = await resetPassword({ userId: state.userId, token: state.token, password: state.password })
-    if (result.data?.resetPassword?.success) {
+    if (result && result.data?.resetPassword?.success) {
       success.value = true
       toast.add({
         title: 'Password reset',
         description: 'Your password has been reset. You can now log in.',
         icon: 'i-heroicons-check-circle',
-        color: 'success'
+        color: 'success',
       })
       setTimeout(() => router.push('/login'), 2000)
-    } else {
+    }
+    else {
       toast.add({
         title: 'Reset failed',
-        description: result.error?.message || 'Invalid or expired token.',
+        description: result?.errors?.[0]?.message || 'Invalid or expired token.',
         icon: 'i-heroicons-exclamation-circle',
-        color: 'error'
+        color: 'error',
       })
     }
-  } catch (e) {
+  }
+  catch (e) {
     toast.add({
       title: 'An error occurred',
       description: e instanceof Error ? e.message : String(e),
       icon: 'i-heroicons-exclamation-circle',
-      color: 'error'
+      color: 'error',
     })
   }
 }
@@ -61,8 +63,12 @@ const handleSubmit = async () => {
   <div class="w-full max-w-md mx-auto">
     <UCard>
       <template #header>
-        <h1 class="text-2xl font-bold text-center">Reset Password</h1>
-        <p class="text-gray-500 text-center mt-2">Enter your new password</p>
+        <h1 class="text-2xl font-bold text-center">
+          Reset Password
+        </h1>
+        <p class="text-gray-500 text-center mt-2">
+          Enter your new password
+        </p>
       </template>
       <UForm :state="state" class="space-y-4" @submit="handleSubmit">
         <UFormField label="Reset Token" name="token">

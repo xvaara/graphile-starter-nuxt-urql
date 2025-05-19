@@ -1,5 +1,5 @@
-import { makeAddPgTableOrderByPlugin, orderByAscDesc } from "graphile-utils";
-import type { SQL } from "pg-sql2";
+import type { SQL } from 'pg-sql2'
+import { makeAddPgTableOrderByPlugin, orderByAscDesc } from 'graphile-utils'
 
 /*
 // This is a rudimentary translation of the old V4 plugin using a subquery,
@@ -25,37 +25,37 @@ export default makeAddPgTableOrderByPlugin(
 */
 
 export default makeAddPgTableOrderByPlugin(
-  { schemaName: "app_public", tableName: "organization_memberships" },
+  { schemaName: 'app_public', tableName: 'organization_memberships' },
   (build) => {
     const {
       sql,
       input: {
         pgRegistry: { pgResources },
       },
-    } = build;
+    } = build
     const usersResource = Object.values(pgResources).find(
-      (s) =>
-        !s.parameters &&
-        s.extensions?.pg?.schemaName === "app_public" &&
-        s.extensions.pg.name === "users"
-    );
+      s =>
+        !s.parameters
+        && s.extensions?.pg?.schemaName === 'app_public'
+        && s.extensions.pg.name === 'users',
+    )
     if (!usersResource) {
-      throw new Error(`Couldn't find the source for app_public.users`);
+      throw new Error(`Couldn't find the source for app_public.users`)
     }
-    const sqlIdentifier = sql.identifier(Symbol("member"));
-    return orderByAscDesc("MEMBER_NAME", ($organizationMemberships) => {
+    const sqlIdentifier = sql.identifier(Symbol('member'))
+    return orderByAscDesc('MEMBER_NAME', ($organizationMemberships) => {
       $organizationMemberships.join({
-        type: "inner",
+        type: 'inner',
         from: usersResource.from as SQL,
         alias: sqlIdentifier,
         conditions: [
           sql`${sqlIdentifier}.id = ${$organizationMemberships.alias}.user_id`,
         ],
-      });
+      })
       return {
         fragment: sql`${sqlIdentifier}.name`,
-        codec: usersResource.codec.attributes!["name"].codec,
-      };
-    });
-  }
-);
+        codec: usersResource.codec.attributes!.name.codec,
+      }
+    })
+  },
+)

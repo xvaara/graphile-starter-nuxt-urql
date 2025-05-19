@@ -19,6 +19,8 @@ const returnTo = computed(() => {
   return to?.startsWith('/') ? to : '/'
 })
 
+const { refetchUser } = useAuth()
+
 const { mutate: login, loading } = useLoginMutation()
 
 async function handleSubmit() {
@@ -35,7 +37,7 @@ async function handleSubmit() {
         icon: 'i-heroicons-check-circle',
         color: 'green',
       })
-      await useAuth(true)
+      await refetchUser()
       navigateTo(returnTo.value)
     }
     else {
@@ -102,7 +104,7 @@ async function handleSubmit() {
             variant="link"
             color="primary"
             size="xs"
-            to="#"
+            to="/forgot"
             class="!p-0"
           >
             Forgot password?
@@ -133,11 +135,5 @@ async function handleSubmit() {
         </div>
       </template>
     </UCard>
-
-    <div class="mt-8 text-center text-gray-500 text-sm">
-      <p>Demo accounts:</p>
-      <p>Email: user@example.com | Password: password123</p>
-      <p>Email: admin@example.com | Password: admin123</p>
-    </div>
   </div>
 </template>

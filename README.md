@@ -2,7 +2,7 @@
 
 For information about Nuxt look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
-Original [Graphile starter](https://github.com/graphile/starter) is build using Next.js and express. This is a fork to use Nuxt, Nuxt UI and URQL.
+Original [Graphile starter](https://github.com/graphile/starter) is build using Next.js and express. This is a fork to use Nuxt, Nuxt UI and Apollo Client.
 ## NOT FOR BEGINNERS
 
 We do not advise that you build your own projects on top of this project until
@@ -16,7 +16,8 @@ you're comfortable with the various tools it uses
 [Graphile Worker](https://github.com/graphile/worker),
 [Graphile Migrate](https://github.com/graphile/migrate),
 [TypeScript](https://www.typescriptlang.org/docs/),
-[URQL](https://nearform.com/open-source/urql/),
+[Apollo Client](https://www.apollographql.com/docs/react),
+[Vue Apollo](https://apollo.vuejs.org/),
 [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator),
 [ESLint](https://eslint.org/), etc.)
 

@@ -4,7 +4,6 @@
   "recommendations": [
     "EditorConfig.EditorConfig", // http://editorconfig.org
     "dbaeumer.vscode-eslint", // ESLint
-    "urql.vscode-urql", // GraphQL support
     "Nuxtr.nuxtr-vscode", // Nuxt 3 support
     "vue.volar", // Vue 3 support
     "antfu.iconify",
@@ -14,7 +13,6 @@
     "vitest.explorer",
     "antfu.vite",
     "lokalise.i18n-ally",
-    "graphql.vscode-graphql-syntax",
-    "graphql.vscode-graphql"
+    "apollographql.vscode-apollo"
   ]
 }

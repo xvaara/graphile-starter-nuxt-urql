@@ -1,7 +1,6 @@
 <script setup lang="ts">
 definePageMeta({ public: false })
 
-
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
@@ -14,8 +13,12 @@ const doingIt = ref(false)
 const deleting = ref(false)
 const deleted = ref(false)
 
-function openModal() { confirmOpen.value = true }
-function closeModal() { confirmOpen.value = false }
+function openModal() {
+  confirmOpen.value = true
+}
+function closeModal() {
+  confirmOpen.value = false
+}
 
 const requestAccountDeletion = useRequestAccountDeletionMutation()
 const confirmAccountDeletion = useConfirmAccountDeletionMutation()
@@ -28,10 +31,12 @@ async function doIt() {
 
     const result = await mutate({})
 
-    if (!result?.data?.requestAccountDeletion?.success) throw new Error('Requesting deletion failed')
+    if (!result?.data?.requestAccountDeletion?.success)
+      throw new Error('Requesting deletion failed')
     itIsDone.value = true
     toast.add({ title: 'Check your email', description: 'A confirmation link was sent to your email.', color: 'info' })
-  } catch (e: Error | unknown) {
+  }
+  catch (e: Error | unknown) {
     error.value = e instanceof Error ? e.message : String(e)
   }
   doingIt.value = false
@@ -39,17 +44,20 @@ async function doIt() {
 }
 
 async function confirmDeletion() {
-  if (deleting.value || !token.value) return
+  if (deleting.value || !token.value)
+    return
   error.value = null
   deleting.value = true
   try {
     const { mutate } = confirmAccountDeletion
     const result = await mutate({ token: token.value })
 
-    if (!result?.data?.confirmAccountDeletion?.success) throw new Error('Account deletion failed')
+    if (!result?.data?.confirmAccountDeletion?.success)
+      throw new Error('Account deletion failed')
     deleted.value = true
     toast.add({ title: 'Account deleted', description: 'Your account has been deleted.', color: 'success' })
-  } catch (e: Error | unknown) {
+  }
+  catch (e: Error | unknown) {
     error.value = e instanceof Error ? e.message : String(e)
   }
   deleting.value = false
@@ -60,7 +68,9 @@ async function confirmDeletion() {
   <div class="max-w-xl mx-auto py-10">
     <UCard>
       <template #header>
-        <h1 class="text-2xl font-bold">Delete Account</h1>
+        <h1 class="text-2xl font-bold">
+          Delete Account
+        </h1>
       </template>
       <div>
         <p class="mb-4">

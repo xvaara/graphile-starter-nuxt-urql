@@ -227,8 +227,23 @@ async function handleTransferBillingContact(userId: string) {
   }
 }
 
+const showDeleteModal = ref(false)
+
 // Delete organization handler
 async function handleDelete() {
+  if (!orgData.value?.organizationBySlug) {
+    toast.add({
+      title: 'Organization not found',
+      description: 'The organization you are trying to delete does not exist.',
+      icon: 'i-heroicons-exclamation-circle',
+      color: 'error',
+    })
+    return
+  }
+  showDeleteModal.value = true
+}
+
+async function confirmDelete() {
   try {
     if (!orgData.value?.organizationBySlug) {
       toast.add({
@@ -237,9 +252,7 @@ async function handleDelete() {
         icon: 'i-heroicons-exclamation-circle',
         color: 'error',
       })
-      return
-    }
-    if (!confirm('Are you sure you want to delete this organization? This action cannot be undone.')) {
+      showDeleteModal.value = false
       return
     }
     const result = await deleteOrganization({ organizationId: orgData.value.organizationBySlug.id })
@@ -268,6 +281,9 @@ async function handleDelete() {
       icon: 'i-heroicons-exclamation-circle',
       color: 'error',
     })
+  }
+  finally {
+    showDeleteModal.value = false
   }
 }
 </script>
@@ -446,6 +462,21 @@ async function handleDelete() {
               </UButton>
             </div>
           </UCard>
+          <UModal v-model="showDeleteModal" title="Delete Organization?" :closable="true">
+            <div class="space-y-4">
+              <div class="text-red-600">
+                <strong>Warning:</strong> This action cannot be undone. Are you sure you want to delete this organization?
+              </div>
+            </div>
+            <template #footer>
+              <UButton color="error" :loading="deleting" @click="confirmDelete">
+                Delete
+              </UButton>
+              <UButton color="neutral" @click="showDeleteModal = false">
+                Cancel
+              </UButton>
+            </template>
+          </UModal>
         </div>
       </template>
     </UTabs>

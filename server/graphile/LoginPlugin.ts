@@ -1,9 +1,9 @@
-import type { PgClassExpressionStep } from "@dataplan/pg";
-import { access } from "grafast";
-import type { Plans, Resolvers } from "graphile-utils";
-import { gql, makeExtendSchemaPlugin } from "graphile-utils";
+import type { PgClassExpressionStep } from '@dataplan/pg'
+import type { Plans, Resolvers } from 'graphile-utils'
+import { access } from 'grafast'
+import { gql, makeExtendSchemaPlugin } from 'graphile-utils'
 
-import { ERROR_MESSAGE_OVERRIDES } from "../utils/handleErrors";
+import { ERROR_MESSAGE_OVERRIDES } from '../utils/handleErrors'
 
 const PassportLoginPlugin = makeExtendSchemaPlugin((build) => {
   const typeDefs = gql`
@@ -86,41 +86,43 @@ const PassportLoginPlugin = makeExtendSchemaPlugin((build) => {
       """
       resetPassword(input: ResetPasswordInput!): ResetPasswordPayload
     }
-  `;
-  const userResource = build.input.pgRegistry.pgResources.users;
-  const currentUserIdResource =
-    build.input.pgRegistry.pgResources.current_user_id;
+  `
+  const userResource = build.input.pgRegistry.pgResources.users
+  const currentUserIdResource
+    = build.input.pgRegistry.pgResources.current_user_id
   if (!userResource || !currentUserIdResource) {
     throw new Error(
-      "Couldn't find either the 'users' or 'current_user_id' source"
-    );
+      'Couldn\'t find either the \'users\' or \'current_user_id\' source',
+    )
   }
   const plans: Plans = {
     RegisterPayload: {
       user($obj) {
-        const $userId = access($obj, "userId");
-        return userResource.get({ id: $userId });
+        const $userId = access($obj, 'userId')
+        return userResource.get({ id: $userId })
       },
     },
     LoginPayload: {
       user() {
-        const $userId =
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          currentUserIdResource.execute() as PgClassExpressionStep<any, any>;
-        return userResource.get({ id: $userId });
+        const $userId
+          = currentUserIdResource.execute() as PgClassExpressionStep<any, any>
+        return userResource.get({ id: $userId })
       },
     },
-  };
+  }
   const resolvers: Resolvers = {
     Mutation: {
       async register(_mutation, args, context: Grafast.Context) {
-        const { username, password, email, name, avatarUrl } = args.input;
-        const { rootPgPool, login, pgSettings } = context;
+        const { username, password, email, name, avatarUrl } = args.input
+        const { rootPgPool, login, pgSettings } = context
         try {
+          if (!rootPgPool) {
+            throw new Error('rootPgPool is not defined')
+          }
           // Create a user and create a session for it in the proccess
           const {
             rows: [details],
-          } = await rootPgPool.query<{ user_id: number; session_id: string }>(
+          } = await rootPgPool.query<{ user_id: number, session_id: string }>(
             `
             with new_user as (
               select users.* from app_private.really_create_user(
@@ -138,131 +140,138 @@ const PassportLoginPlugin = makeExtendSchemaPlugin((build) => {
             )
             select new_user.id as user_id, new_session.uuid as session_id
             from new_user, new_session`,
-            [username, email, name, avatarUrl, password]
-          );
+            [username, email, name, avatarUrl, password],
+          )
 
           if (!details || !details.user_id) {
-            throw Object.assign(new Error("Registration failed"), {
-              code: "FFFFF",
-            });
+            throw Object.assign(new Error('Registration failed'), {
+              code: 'FFFFF',
+            })
           }
 
           if (details.session_id) {
             // Update pgSettings so future queries will use the new session
-            pgSettings!["jwt.claims.session_id"] = details.session_id;
+            pgSettings!['jwt.claims.session_id'] = details.session_id
 
             // Tell Passport.js we're logged in
-            await login({ session_id: details.session_id });
+            await login({ session_id: details.session_id })
           }
 
           return {
             userId: details.user_id,
-          };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (e: any) {
-          const { code } = e;
+          }
+        }
+        catch (e: any) {
+          const { code } = e
           const safeErrorCodes = [
-            "WEAKP",
-            "LOCKD",
-            "EMTKN",
+            'WEAKP',
+            'LOCKD',
+            'EMTKN',
             ...Object.keys(ERROR_MESSAGE_OVERRIDES),
-          ];
+          ]
           if (safeErrorCodes.includes(code)) {
             // TODO: make SafeError
-            throw e;
-          } else {
+            throw e
+          }
+          else {
             console.error(
-              "Unrecognised error in PassportLoginPlugin; replacing with sanitized version"
-            );
-            console.error(e);
-            throw Object.assign(new Error("Registration failed"), {
+              'Unrecognised error in PassportLoginPlugin; replacing with sanitized version',
+            )
+            console.error(e)
+            throw Object.assign(new Error('Registration failed'), {
               code,
-            });
+            })
           }
         }
       },
       async login(_mutation, args, context: Grafast.Context) {
-        const { username, password } = args.input;
-        const { rootPgPool, login, pgSettings } = context;
+        const { username, password } = args.input
+        const { rootPgPool, login, pgSettings } = context
         try {
+          if (!rootPgPool) {
+            throw new Error('rootPgPool is not defined')
+          }
           // Call our login function to find out if the username/password combination exists
           const {
             rows: [session],
           } = await rootPgPool.query(
             `select sessions.* from app_private.login($1, $2) sessions where not (sessions is null)`,
-            [username, password]
-          );
+            [username, password],
+          )
           if (!session) {
-            throw Object.assign(new Error("Incorrect username/password"), {
-              code: "CREDS",
-            });
+            throw Object.assign(new Error('Incorrect username/password'), {
+              code: 'CREDS',
+            })
           }
 
           if (session.uuid) {
             // Tell Passport.js we're logged in
-            await login({ secure: { session_id: session.uuid } });
+            await login({ secure: { session_id: session.uuid } })
           }
 
           // Update pgSettings so future queries will use the new session
-          pgSettings!["jwt.claims.session_id"] = session.uuid;
+          pgSettings!['jwt.claims.session_id'] = session.uuid
 
-          return {};
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (e: any) {
-          const code = e.extensions?.code ?? e.code;
-          const safeErrorCodes = ["LOCKD", "CREDS"];
+          return {}
+        }
+        catch (e: any) {
+          const code = e.extensions?.code ?? e.code
+          const safeErrorCodes = ['LOCKD', 'CREDS']
           if (safeErrorCodes.includes(code)) {
             // TODO: throw SafeError
-            throw e;
-          } else {
-            console.error(e);
-            throw Object.assign(new Error("Login failed"), {
+            throw e
+          }
+          else {
+            console.error(e)
+            throw Object.assign(new Error('Login failed'), {
               code,
-            });
+            })
           }
         }
       },
 
       async logout(_mutation, _args, context: Grafast.Context) {
-        const { pgSettings, withPgClient, logout } = context;
-        await withPgClient(pgSettings, (pgClient) =>
-          pgClient.query({ text: "select app_public.logout();" })
-        );
-        await logout();
+        const { pgSettings, withPgClient, logout } = context
+        await withPgClient(pgSettings, pgClient =>
+          pgClient.query({ text: 'select app_public.logout();' }))
+        await logout()
         return {
           success: true,
-        };
+        }
       },
 
       async resetPassword(_mutation, args, context: Grafast.Context) {
-        const { rootPgPool } = context;
-        const { userId, resetToken, newPassword, clientMutationId } =
-          args.input;
+        const { rootPgPool } = context
+        const { userId, resetToken, newPassword, clientMutationId }
+          = args.input
 
         // Since the `reset_password` function needs to keep track of attempts
         // for security, we cannot risk the transaction being rolled back by a
         // later error. As such, we don't allow users to call this function
         // through normal means, instead calling it through our root pool
         // without a transaction.
+        if (!rootPgPool) {
+          throw new Error('rootPgPool is not defined')
+        }
         const {
           rows: [row],
         } = await rootPgPool.query(
           `select app_private.reset_password($1::uuid, $2::text, $3::text) as success`,
-          [userId, resetToken, newPassword]
-        );
+          [userId, resetToken, newPassword],
+        )
 
         return {
           clientMutationId,
           success: row?.success,
-        };
+        }
       },
     },
-  };
+  }
   return {
     typeDefs,
     plans,
     resolvers,
-  };
-});
+  }
+})
 
-export default PassportLoginPlugin;
+export default PassportLoginPlugin

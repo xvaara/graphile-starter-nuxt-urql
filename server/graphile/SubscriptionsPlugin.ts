@@ -1,7 +1,7 @@
-import { jsonParse } from "@dataplan/json";
-import type { PgClassExpressionStep } from "@dataplan/pg";
-import { access, context, lambda, listen, SafeError } from "grafast";
-import { gql, makeExtendSchemaPlugin } from "graphile-utils";
+import type { PgClassExpressionStep } from '@dataplan/pg'
+import { jsonParse } from '@dataplan/json'
+import { access, context, lambda, listen, SafeError } from 'grafast'
+import { gql, makeExtendSchemaPlugin } from 'graphile-utils'
 
 /*
  * PG NOTIFY events are sent via a channel, this function helps us determine
@@ -13,9 +13,10 @@ import { gql, makeExtendSchemaPlugin } from "graphile-utils";
  */
 function currentUserTopicByUserId(userId: number | null) {
   if (userId) {
-    return `graphql:user:${userId}`;
-  } else {
-    throw new SafeError("You're not logged in");
+    return `graphql:user:${userId}`
+  }
+  else {
+    throw new SafeError('You\'re not logged in')
   }
 }
 
@@ -33,19 +34,19 @@ function currentUserTopicByUserId(userId: number | null) {
  * And see the database trigger function `app_public.tg__graphql_subscription()`.
  */
 const SubscriptionsPlugin = makeExtendSchemaPlugin((build) => {
-  const currentUserIdResource =
-    build.input.pgRegistry.pgResources.current_user_id;
+  const currentUserIdResource
+    = build.input.pgRegistry.pgResources.current_user_id
   if (!currentUserIdResource) {
-    throw new Error("Couldn't find current_user_id source");
+    throw new Error('Couldn\'t find current_user_id source')
   }
   const usersResource = Object.values(build.input.pgRegistry.pgResources).find(
-    (s) =>
-      !s.parameters &&
-      s.extensions?.pg?.schemaName === "app_public" &&
-      s.extensions.pg.name === "users"
-  );
+    s =>
+      !s.parameters
+      && s.extensions?.pg?.schemaName === 'app_public'
+      && s.extensions.pg.name === 'users',
+  )
   if (!usersResource) {
-    throw new Error("Couldn't find source for app_public.users");
+    throw new Error('Couldn\'t find source for app_public.users')
   }
 
   return {
@@ -66,38 +67,36 @@ const SubscriptionsPlugin = makeExtendSchemaPlugin((build) => {
       Subscription: {
         currentUserUpdated: {
           subscribePlan() {
-            const $pgSubscriber = context().get("pgSubscriber");
+            const $pgSubscriber = context().get('pgSubscriber')
             // We have the users session ID, but to get their actual ID we need to ask the database.
-            const $userId =
-              currentUserIdResource.execute() as PgClassExpressionStep<
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const $userId
+              = currentUserIdResource.execute() as PgClassExpressionStep<
                 any,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 any
-              >;
-            const $topic = lambda($userId, currentUserTopicByUserId);
-            return listen($pgSubscriber, $topic, (e) => e);
+              >
+            const $topic = lambda($userId, currentUserTopicByUserId)
+            return listen($pgSubscriber, $topic, e => e)
           },
           plan($e) {
-            return jsonParse<TgGraphQLSubscriptionPayload>($e);
+            return jsonParse<TgGraphQLSubscriptionPayload>($e)
           },
         },
       },
       UserSubscriptionPayload: {
         user($obj) {
-          const $id = access($obj, "subject");
-          return usersResource.get({ id: $id });
+          const $id = access($obj, 'subject')
+          return usersResource.get({ id: $id })
         },
       },
     },
-  };
-});
+  }
+})
 
 /* The JSON object that `tg__graphql_subscription()` delivers via NOTIFY */
 interface TgGraphQLSubscriptionPayload {
-  event: string;
-  subject: string | null;
-  [key: string]: string | null;
+  event: string
+  subject: string | null
+  [key: string]: string | null
 }
 
-export default SubscriptionsPlugin;
+export default SubscriptionsPlugin

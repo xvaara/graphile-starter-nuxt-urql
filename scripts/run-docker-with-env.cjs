@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-require("dotenv").config();
-const { runSync } = require("./lib/run");
+require('dotenv').config()
+const { runSync } = require('./lib/run')
 
 const {
   DATABASE_OWNER,
@@ -14,34 +14,34 @@ const {
   GITHUB_SECRET,
   DATABASE_NAME,
   GRAPHILE_LICENSE,
-} = process.env;
+} = process.env
 
-const DATABASE_HOST = "172.17.0.1";
-const DATABASE_URL = `postgres://${DATABASE_OWNER}:${DATABASE_OWNER_PASSWORD}@${DATABASE_HOST}/${DATABASE_NAME}`;
-const AUTH_DATABASE_URL = `postgres://${DATABASE_AUTHENTICATOR}:${DATABASE_AUTHENTICATOR_PASSWORD}@${DATABASE_HOST}/${DATABASE_NAME}`;
+const DATABASE_HOST = '172.17.0.1'
+const DATABASE_URL = `postgres://${DATABASE_OWNER}:${DATABASE_OWNER_PASSWORD}@${DATABASE_HOST}/${DATABASE_NAME}`
+const AUTH_DATABASE_URL = `postgres://${DATABASE_AUTHENTICATOR}:${DATABASE_AUTHENTICATOR_PASSWORD}@${DATABASE_HOST}/${DATABASE_NAME}`
 
-runSync("docker", [
-  "run",
-  "--rm",
-  "-it",
-  "--init",
-  "-p",
-  "5678:5678",
-  "-e",
+runSync('docker', [
+  'run',
+  '--rm',
+  '-it',
+  '--init',
+  '-p',
+  '5678:5678',
+  '-e',
   `DATABASE_VISITOR=${DATABASE_VISITOR}`,
-  "-e",
+  '-e',
   `GRAPHILE_LICENSE=${GRAPHILE_LICENSE}`,
-  "-e",
+  '-e',
   `SECRET=${SECRET}`,
-  "-e",
+  '-e',
   `JWT_SECRET=${JWT_SECRET}`,
-  "-e",
+  '-e',
   `DATABASE_URL=${DATABASE_URL}`,
-  "-e",
+  '-e',
   `AUTH_DATABASE_URL=${AUTH_DATABASE_URL}`,
-  "-e",
+  '-e',
   `GITHUB_KEY=${GITHUB_KEY}`,
-  "-e",
+  '-e',
   `GITHUB_SECRET=${GITHUB_SECRET}`,
   process.argv[2],
-]);
+])

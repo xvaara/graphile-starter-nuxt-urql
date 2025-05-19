@@ -15,7 +15,7 @@ const state = reactive({
   username: '',
   email: '',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
 })
 
 const fieldErrors = reactive({
@@ -23,24 +23,30 @@ const fieldErrors = reactive({
   username: '',
   email: '',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
 })
 
 const validatePasswords = computed(() => {
-  if (!state.confirmPassword) return true
+  if (!state.confirmPassword)
+    return true
   return state.password === state.confirmPassword
 })
 
 const validateUsername = computed(() => {
-  if (!state.username) return true
-  if (state.username.length < 2 || state.username.length > 24) return false
-  if (!/^([a-zA-Z]|$)/.test(state.username)) return false
-  if (!/^([^_]|_[^_]|_$)*$/.test(state.username)) return false
-  if (!/^[a-zA-Z0-9_]*$/.test(state.username)) return false
+  if (!state.username)
+    return true
+  if (state.username.length < 2 || state.username.length > 24)
+    return false
+  if (!/^[a-z]|$/i.test(state.username))
+    return false
+  if (!/^(?:[^_]|_[^_]|_$)*$/.test(state.username))
+    return false
+  if (!/^\w*$/.test(state.username))
+    return false
   return true
 })
 
-const handleSubmit = async () => {
+async function handleSubmit() {
   // Reset field errors
   Object.keys(fieldErrors).forEach(key => fieldErrors[key] = '')
   try {
@@ -50,7 +56,7 @@ const handleSubmit = async () => {
         title: 'Passwords do not match',
         description: 'Please make sure your passwords match',
         icon: 'i-heroicons-exclamation-circle',
-        color: 'red'
+        color: 'red',
       })
       return
     }
@@ -61,7 +67,7 @@ const handleSubmit = async () => {
         title: 'Invalid username',
         description: 'Please provide a valid username',
         icon: 'i-heroicons-exclamation-circle',
-        color: 'red'
+        color: 'red',
       })
       return
     }
@@ -70,56 +76,61 @@ const handleSubmit = async () => {
       name: state.name,
       username: state.username,
       email: state.email,
-      password: state.password
+      password: state.password,
     })
-    console.log('Registration result:', result)
     if (result.data.register?.user) {
       toast.add({
         title: 'Account created successfully',
         description: `Welcome, ${result.data.register.user.name}!`,
         icon: 'i-heroicons-check-circle',
-        color: 'green'
+        color: 'green',
       })
       router.push('/profile')
-    } else {
-
+    }
+    else {
       if (result.error) {
-        const code = getCodeFromError(result.error);
-        const exception = getExceptionFromError(result.error);
+        const code = getCodeFromError(result.error)
+        const exception = getExceptionFromError(result.error)
         console.error('Registration error:', code, exception)
-        const fields = exception?.extensions?.fields ?? exception?.fields;
-        if (code === "WEAKP") {
-          fieldErrors.password = "The server believes this passphrase is too weak, please make it stronger"
-        } else if (code === "EMTKN") {
-          fieldErrors.email = "An account with this email address has already been registered, consider using the 'Forgot passphrase' function."
-        } else if (code === "NUNIQ" && fields && fields[0] === "username") {
-          fieldErrors.username = "An account with this username has already been registered, please try a different username."
-        } else if (code === "23514") {
-          fieldErrors.username = "This username is not allowed; usernames must be between 2 and 24 characters long (inclusive), must start with a letter, and must contain only alphanumeric characters and underscores."
-        } else {
+        const fields = exception?.extensions?.fields ?? exception?.fields
+        if (code === 'WEAKP') {
+          fieldErrors.password = 'The server believes this passphrase is too weak, please make it stronger'
+        }
+        else if (code === 'EMTKN') {
+          fieldErrors.email = 'An account with this email address has already been registered, consider using the \'Forgot passphrase\' function.'
+        }
+        else if (code === 'NUNIQ' && fields && fields[0] === 'username') {
+          fieldErrors.username = 'An account with this username has already been registered, please try a different username.'
+        }
+        else if (code === '23514') {
+          fieldErrors.username = 'This username is not allowed; usernames must be between 2 and 24 characters long (inclusive), must start with a letter, and must contain only alphanumeric characters and underscores.'
+        }
+        else {
           toast.add({
             title: 'Registration failed',
-            description: 'An error occurred during registration: ' + result.error.message,
+            description: `An error occurred during registration: ${result.error.message}`,
             icon: 'i-heroicons-exclamation-circle',
-            color: 'red'
+            color: 'red',
           })
         }
-      } else {
+      }
+      else {
         toast.add({
           title: 'Registration failed',
           description: 'An unknown error occurred during registration',
           icon: 'i-heroicons-exclamation-circle',
-          color: 'red'
+          color: 'red',
         })
       }
     }
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Registration error:', e)
     toast.add({
       title: 'An error occurred',
-      description: 'Please try again later: ' + e.message,
+      description: `Please try again later: ${e.message}`,
       icon: 'i-heroicons-exclamation-circle',
-      color: 'red'
+      color: 'red',
     })
   }
 }
@@ -129,8 +140,12 @@ const handleSubmit = async () => {
   <div class="w-full max-w-md mx-auto">
     <UCard>
       <template #header>
-        <h1 class="text-2xl font-bold text-center">Create Account</h1>
-        <p class="text-gray-500 text-center mt-2">Join us today</p>
+        <h1 class="text-2xl font-bold text-center">
+          Create Account
+        </h1>
+        <p class="text-gray-500 text-center mt-2">
+          Join us today
+        </p>
       </template>
 
       <UForm :state="state" class="space-y-4" @submit="handleSubmit">

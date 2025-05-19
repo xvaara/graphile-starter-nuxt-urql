@@ -9,7 +9,15 @@ const success = ref(false)
 async function handleSubmit() {
   try {
     const result = await forgotPassword({ email: state.email })
-    if (!result.error) {
+    if (!result) {
+      toast.add({
+        title: 'An error occurred',
+        description: 'Please try again later',
+        icon: 'i-heroicons-exclamation-circle',
+        color: 'error',
+      })
+    }
+    else if (!result.errors) {
       success.value = true
       toast.add({
         title: 'Check your email',
@@ -21,7 +29,7 @@ async function handleSubmit() {
     else {
       toast.add({
         title: 'Request failed',
-        description: result.error.message,
+        description: result?.errors?.[0]?.message || 'An error occurred',
         icon: 'i-heroicons-exclamation-circle',
         color: 'error',
       })

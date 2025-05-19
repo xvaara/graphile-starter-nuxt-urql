@@ -1,3 +1,5 @@
+const isDev = process.env.NODE_ENV === 'development'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-01',
@@ -36,15 +38,19 @@ export default defineNuxtConfig({
     },
   },
   security: {
-    strict: !import.meta.dev,
-    headers: {
-    },
+    strict: !isDev,
+    headers: false,
     csrf: {
-      enabled: true,
+      enabled: false,
       addCsrfTokenToEventCtx: true,
     },
+    removeLoggers: !isDev,
   },
   routeRules: {
+    // TODO: figure how ruru can be configured to not check csrf for graphql
+    // '/api/graphql': {
+    //   csurf: false,
+    // },
   },
   ui: {
   },
@@ -55,11 +61,11 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
     public: {
-      rootUrl: import.meta.env.ROOT_URL || 'http://localhost:3000',
+      rootUrl: process.env.ROOT_URL || 'http://localhost:3000',
     },
     session: {
       cookie: {
-        secure: !import.meta.dev,
+        secure: !isDev,
       },
     },
   },

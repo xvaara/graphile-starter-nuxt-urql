@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-const fs = require("fs");
+const fs = require('node:fs')
 
 try {
-  fs.unlinkSync(`${__dirname}/../.env`);
-} catch (e) {
+  fs.unlinkSync(`${import.meta.dirname}/../.env`)
+}
+catch {
   /* NOOP */
 }

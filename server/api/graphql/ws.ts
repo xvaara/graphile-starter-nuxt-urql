@@ -1,4 +1,4 @@
-import { defineWebSocketHandler } from "h3";
-import { serv } from "~~/server/graphserv/serv";
+import { defineWebSocketHandler } from 'h3'
+import { serv } from '~~/server/graphserv/serv'
 
-export default defineWebSocketHandler(serv.makeWsHandler());
+export default defineWebSocketHandler(serv.makeWsHandler())

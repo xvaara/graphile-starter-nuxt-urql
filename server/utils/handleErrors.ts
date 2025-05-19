@@ -1,42 +1,41 @@
-import { GraphQLError } from "graphql";
-import camelCase from "lodash-es/camelCase";
+import { GraphQLError } from 'graphql'
+import camelCase from 'lodash-es/camelCase'
 
-const isDev = process.env.NODE_ENV === "development";
-const isTest = process.env.NODE_ENV === "test";
+const isDev = process.env.NODE_ENV === 'development'
+const isTest = process.env.NODE_ENV === 'test'
 
-const ERROR_PROPERTIES_TO_EXPOSE =
-  isDev || isTest
+const ERROR_PROPERTIES_TO_EXPOSE
+  = isDev || isTest
     ? [
-        "code",
-        "severity",
-        "detail",
-        "hint",
-        "positon",
-        "internalPosition",
-        "internalQuery",
-        "where",
-        "schema",
-        "table",
-        "column",
-        "dataType",
-        "constraint",
+        'code',
+        'severity',
+        'detail',
+        'hint',
+        'positon',
+        'internalPosition',
+        'internalQuery',
+        'where',
+        'schema',
+        'table',
+        'column',
+        'dataType',
+        'constraint',
       ]
-    : ["code"];
+    : ['code']
 
 // This would be better as a macro...
-const pluck = (err: any): { [key: string]: any } => {
+function pluck(err: any): { [key: string]: any } {
   return ERROR_PROPERTIES_TO_EXPOSE.reduce((memo, key) => {
-    const value =
-      key === "code"
-        ? // err.errcode is equivalent to err.code; replace it
-          err.code || err.errcode
-        : err[key];
+    const value
+      = key === 'code'
+        ? err.code || err.errcode // err.errcode is equivalent to err.code; replace it
+        : err[key]
     if (value != null) {
-      memo[key] = value;
+      memo[key] = value
     }
-    return memo;
-  }, Object.create(null) as Record<string, any>);
-};
+    return memo
+  }, Object.create(null) as Record<string, any>)
+}
 
 /**
  * This map allows you to override the error object output to users from
@@ -48,51 +47,51 @@ const pluck = (err: any): { [key: string]: any } => {
  * list of error codes that PostgreSQL produces.
  */
 export const ERROR_MESSAGE_OVERRIDES: { [code: string]: typeof pluck } = {
-  "42501": (err) => ({
+  42501: err => ({
     ...pluck(err),
-    message: "Permission denied (by RLS)",
+    message: 'Permission denied (by RLS)',
   }),
-  "23505": (err) => ({
+  23505: err => ({
     ...pluck(err),
-    message: "Conflict occurred",
+    message: 'Conflict occurred',
     fields: conflictFieldsFromError(err),
-    code: "NUNIQ",
+    code: 'NUNIQ',
   }),
-  "23503": (err) => ({
+  23503: err => ({
     ...pluck(err),
-    message: "Invalid reference",
+    message: 'Invalid reference',
     fields: conflictFieldsFromError(err),
-    code: "BADFK",
+    code: 'BADFK',
   }),
-};
+}
 
 function conflictFieldsFromError(err: any) {
-  const { table, constraint } = err;
+  const { table, constraint } = err
   // TODO: extract a list of constraints from the DB
   if (constraint && table) {
-    const PREFIX = `${table}_`;
-    const SUFFIX_LIST = [`_key`, `_fkey`];
+    const PREFIX = `${table}_`
+    const SUFFIX_LIST = [`_key`, `_fkey`]
     if (constraint.startsWith(PREFIX)) {
-      const matchingSuffix = SUFFIX_LIST.find((SUFFIX) =>
-        constraint.endsWith(SUFFIX)
-      );
+      const matchingSuffix = SUFFIX_LIST.find(SUFFIX =>
+        constraint.endsWith(SUFFIX),
+      )
       if (matchingSuffix) {
         const maybeColumnNames = constraint.substr(
           PREFIX.length,
-          constraint.length - PREFIX.length - matchingSuffix.length
-        );
-        return [camelCase(maybeColumnNames)];
+          constraint.length - PREFIX.length - matchingSuffix.length,
+        )
+        return [camelCase(maybeColumnNames)]
       }
     }
   }
-  return undefined;
+  return undefined
 }
 
 function maskError(error: GraphQLError): GraphQLError {
-  const { message: rawMessage, originalError } = error;
-  const code = originalError ? (originalError as any)["code"] : null;
-  const localPluck = ERROR_MESSAGE_OVERRIDES[code] || pluck;
-  const exception = localPluck(originalError || error);
+  const { message: rawMessage, originalError } = error
+  const code = originalError ? (originalError as any).code : null
+  const localPluck = ERROR_MESSAGE_OVERRIDES[code] || pluck
+  const exception = localPluck(originalError || error)
   return new GraphQLError(
     exception.message || rawMessage,
     error.nodes,
@@ -102,12 +101,12 @@ function maskError(error: GraphQLError): GraphQLError {
     error.originalError,
     {
       exception,
-    }
-  );
+    },
+  )
 }
 
 export default function handleErrors(
-  errors: readonly GraphQLError[]
+  errors: readonly GraphQLError[],
 ): GraphQLError[] {
-  return errors.map(maskError);
+  return errors.map(maskError)
 }
