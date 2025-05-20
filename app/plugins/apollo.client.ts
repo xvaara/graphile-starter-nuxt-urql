@@ -16,13 +16,7 @@ export default defineNuxtPlugin((nuxt) => {
   const rootUrl = useRuntimeConfig().public.rootUrl || 'http://localhost:3000'
 
   // Cache implementation
-  const cache = new InMemoryCache({
-    typePolicies: {
-      Query: {
-        queryType: true,
-      },
-    },
-  })
+  const cache = new InMemoryCache()
 
   // when app is created in browser, restore SSR state from nuxt payload
   if (import.meta.client) {
@@ -49,28 +43,44 @@ export default defineNuxtPlugin((nuxt) => {
       'csrf-token': csrf,
     },
   })
-  const wsClient = createWSClient({
-    url: `${rootUrl}/api/graphql/ws`,
-    connectionParams: {
-      headers: {
-        ...headers,
-        'csrf-token': csrf,
+  let wsClient: WSClient | undefined
+  let wsLink: GraphQLWsLink | undefined
+  let splitLink: typeof httpLink
+  try {
+    wsClient = createWSClient({
+      url: `${rootUrl}/api/graphql/ws`,
+      connectionParams: {
+        headers: {
+          ...headers,
+          'csrf-token': csrf,
+        },
       },
-    },
-  })
-  const wsLink = new GraphQLWsLink(wsClient)
+    })
+    wsLink = new GraphQLWsLink(wsClient)
+  }
+  catch (e) {
+    wsClient = undefined
+    wsLink = undefined
+    // Optionally log the error
+    console.warn('WebSocket client could not be created:', e)
+  }
 
-  const splitLink = split(
-    ({ query }) => {
-      const definition = getMainDefinition(query)
-      return (
-        definition.kind === 'OperationDefinition'
-        && definition.operation === 'subscription'
-      )
-    },
-    wsLink,
-    httpLink,
-  )
+  if (wsLink) {
+    splitLink = split(
+      ({ query }) => {
+        const definition = getMainDefinition(query)
+        return (
+          definition.kind === 'OperationDefinition'
+          && definition.operation === 'subscription'
+        )
+      },
+      wsLink,
+      httpLink,
+    )
+  }
+  else {
+    splitLink = httpLink
+  }
 
   // Handle errors
   const errorLink = onError((error) => {

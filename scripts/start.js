@@ -5,16 +5,18 @@ import fs from 'node:fs'
 const ENVFILE = `${import.meta.dirname}/../.env`
 
 if (!fs.existsSync(ENVFILE)) {
-  console.error('🛠️  Please run \'yarn setup\' before running \'yarn start\'')
+  console.error('🛠️  Please run \'bun setup\' before running \'bun start\'')
   process.exit(1)
 }
 
-spawn('yarn', ['dev'], {
+spawn('bun', ['dev'], {
   stdio: 'inherit',
   env: {
     ...process.env,
-    // YARN_SILENT: "1",
     npm_config_loglevel: 'silent',
   },
   shell: true,
+}).on('error', (err) => {
+  console.error('Failed to start development server:', err)
+  process.exit(1)
 })

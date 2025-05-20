@@ -8,7 +8,7 @@ const toast = useToast()
 const route = useRoute()
 
 const state = reactive({
-  email: '',
+  username: '',
   password: '',
 })
 
@@ -21,11 +21,11 @@ const returnTo = computed(() => {
 
 const { refetchUser } = useAuth()
 
-const { mutate: login, loading } = useLoginMutation()
+const { mutate: loginMutate, loading } = useLoginMutation()
 
 async function handleSubmit() {
   try {
-    const result = await login({
+    const result = await loginMutate({
       username: state.username,
       password: state.password,
     })

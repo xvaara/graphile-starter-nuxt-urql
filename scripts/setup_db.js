@@ -32,6 +32,22 @@ runMain(async () => {
     CONFIRM_DROP,
   } = process.env
 
+  // Validate required environment variables
+  const requiredEnvVars = [
+    'DATABASE_AUTHENTICATOR',
+    'DATABASE_AUTHENTICATOR_PASSWORD',
+    'DATABASE_NAME',
+    'DATABASE_OWNER',
+    'DATABASE_OWNER_PASSWORD',
+    'DATABASE_VISITOR',
+    'ROOT_DATABASE_URL',
+  ]
+
+  const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName])
+  if (missingEnvVars.length > 0) {
+    console.error(`Error: Missing required environment variables: ${missingEnvVars.join(', ')}`)
+    process.exit(1)
+  }
   if (!CONFIRM_DROP) {
     const { default: inquirer } = await import('inquirer')
     const confirm = await inquirer.prompt([
@@ -105,9 +121,10 @@ runMain(async () => {
     // Ref: https://devcenter.heroku.com/articles/heroku-postgresql#connection-permissions
 
     // This is the root role for the database`);
+    const isProd = process.env.NODE_ENV === 'production'
     await client.query(
       // IMPORTANT: don't grant SUPERUSER in production, we only need this so we can load the watch fixtures!
-      `CREATE ROLE ${DATABASE_OWNER} WITH LOGIN PASSWORD '${DATABASE_OWNER_PASSWORD}' SUPERUSER;`,
+      `CREATE ROLE ${DATABASE_OWNER} WITH LOGIN PASSWORD '${DATABASE_OWNER_PASSWORD}' ${isProd ? '' : 'SUPERUSER'};`,
     )
 
     // This is the no-access role that PostGraphile will run as by default`);

@@ -11,6 +11,21 @@ const { result: orgData, loading, onResult } = useOrganizationPageQuery(() => ({
   slug: slug.value,
 }))
 
+const generalState = reactive({
+  name: '',
+  slug: '',
+})
+
+await new Promise<void>(resolve => onResult(({ data }) => {
+  if (data?.organizationBySlug) {
+    generalState.name = data.organizationBySlug.name
+    generalState.slug = data.organizationBySlug.slug
+  }
+  resolve()
+}))
+
+console.log('orgData', orgData.value)
+
 // Throw 404 error if organization not found, but only after the query completes
 watchEffect(() => {
   if (!loading.value && orgData.value && !orgData.value.organizationBySlug) {
@@ -33,18 +48,6 @@ watchEffect(() => {
 
 const { mutate: updateOrganization, loading: updating } = useUpdateOrganizationMutation()
 const { mutate: deleteOrganization, loading: deleting } = useDeleteOrganizationMutation()
-
-const generalState = reactive({
-  name: '',
-  slug: '',
-})
-
-onResult(({ data }) => {
-  if (data?.organizationBySlug) {
-    generalState.name = data.organizationBySlug.name
-    generalState.slug = data.organizationBySlug.slug
-  }
-})
 
 // Members state and mutations
 const page = ref(1)

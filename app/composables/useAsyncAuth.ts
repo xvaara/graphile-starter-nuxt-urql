@@ -2,7 +2,7 @@ import type { FetchPolicy, WatchQueryFetchPolicy } from '@apollo/client/core/wat
 
 export async function useAsyncAuth(fetchPolicy: WatchQueryFetchPolicy | FetchPolicy = 'cache-first'): Promise<{
   isAuthenticated: ComputedRef<boolean>
-  user: ComputedRef<SharedLayout_UserFragment | null>
+  user: Ref<Readonly<SharedLayout_UserFragment | null>>
 }> {
   const nuxtApp = useNuxtApp()
   const client = nuxtApp.$apollo
@@ -12,21 +12,37 @@ export async function useAsyncAuth(fetchPolicy: WatchQueryFetchPolicy | FetchPol
     if (fetchPolicy === 'cache-and-network') {
       fetchPolicy = 'cache-first'
     }
-    const { data } = await client.query<SharedQuery>({ query: SharedDocument, fetchPolicy })
-    user.value = data?.currentUser
+    try {
+      const { data } = await client.query<SharedQuery>({ query: SharedDocument, fetchPolicy })
+      user.value = data?.currentUser
+    }
+    catch (error) {
+      console.error('Error fetching auth state:', error)
+      // Optionally set user to null explicitly
+      user.value = null
+    }
     return {
       isAuthenticated: computed(() => !!user.value),
-      user: computed(() => user.value),
+      user: readonly(user),
     }
   }
   else {
     return new Promise((resolve) => {
-      const { onResult } = useSharedQuery({ fetchPolicy })
+      const { onResult, onError } = useSharedQuery({ fetchPolicy })
       onResult(({ data }) => {
         user.value = data?.currentUser
         resolve({
           isAuthenticated: computed(() => !!user.value),
-          user: computed(() => user.value),
+          user: readonly(user),
+        })
+      })
+      onError((error) => {
+        console.error('Error fetching auth state:', error)
+        // Resolve with null user to prevent hanging promises
+        user.value = null
+        resolve({
+          isAuthenticated: computed(() => false),
+          user: readonly(user),
         })
       })
     })

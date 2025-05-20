@@ -1,4 +1,5 @@
 import type { Pool } from 'pg'
+import type { UserSessionData } from './types'
 import { ServerResponse } from 'node:http'
 // import { PersistedPlugin } from "@grafserv/persisted";
 // import { PgOmitArchivedPlugin } from "@graphile-contrib/pg-omit-archived";
@@ -228,7 +229,7 @@ export function getPreset({
       async context(ctx) {
         // console.log("context", ctx);
         // @ts-expect-error ws in context
-        const event = ctx.event ?? ctx.h3v1?.event ?? new H3Event(ctx.ws.request._req, new ServerResponse(ctx.ws.request)) // <=== ctx.ws is provided by makeWsHandler: open hook !
+        const event = ctx.event ?? ctx.h3v1?.event ?? (ctx.ws ? new H3Event(ctx.ws.request._req, new ServerResponse(ctx.ws.request)) : null) // <=== ctx.ws is provided by makeWsHandler: open hook !
         // console.log("event", event);
         if (!event) {
           throw new Error('No event')
@@ -249,10 +250,8 @@ export function getPreset({
         return {
           sessionId: uuidOrNull(session.secure?.session_id),
           rootPgPool,
-          login: (userSession: typeof session) =>
-            setUserSession(event, userSession),
-          logout: () =>
-            clearUserSession(event),
+          login: (userSession: UserSessionData) => setUserSession(event, userSession),
+          logout: () => clearUserSession(event),
           /*
           * Postgres transaction settings for each GraphQL query/mutation to
           * indicate to Postgres who is attempting to access the resources. These

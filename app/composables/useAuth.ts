@@ -18,7 +18,7 @@ export function useAuth() {
   })
 
   function subscribe() {
-    const { onResult: onCurrentUserUpdated } = useCurrentUserUpdatedSubscription({ enabled: toRef(() => !!user.value) })
+    const { onResult: onCurrentUserUpdated } = useCurrentUserUpdatedSubscription(toRef(() => ({ enabled: !!user.value })))
     onCurrentUserUpdated(({ data }) => {
       if (data?.currentUserUpdated?.user) {
         user.value = data?.currentUserUpdated?.user as SharedLayout_UserFragment
@@ -26,7 +26,7 @@ export function useAuth() {
     })
   }
   if (import.meta.client) {
-    callOnce('subscribe', subscribe)
+    callOnce('auth:subscribe', subscribe)
   }
   function logout() {
     return client
@@ -55,7 +55,7 @@ export function useAuth() {
 
   return {
     isAuthenticated: computed(() => !!user.value),
-    user,
+    user: readonly(user),
     subscribe,
     logout,
     refetchUser,

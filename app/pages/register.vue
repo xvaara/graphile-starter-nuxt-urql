@@ -3,6 +3,8 @@ definePageMeta({
   layout: 'auth',
 })
 
+const { refetchUser } = useAuth()
+
 // TODO: Add a loading state
 const loading = ref(false)
 const { mutate: register } = useRegisterMutation()
@@ -88,7 +90,8 @@ async function handleSubmit() {
         icon: 'i-heroicons-check-circle',
         color: 'green',
       })
-      router.push('/profile')
+      await refetchUser()
+      navigateTo('/')
     }
     else {
       if (result.error) {

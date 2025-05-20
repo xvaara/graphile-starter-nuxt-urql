@@ -5,7 +5,8 @@ import { safeRandomString } from './lib/random.js'
 export { readDotenv, withDotenvUpdater } from './lib/dotenv.js'
 export { runSync } from './lib/run.js'
 
-if (Number.parseInt(process.version.split('.')[0], 10) < 22) {
+const major = Number.parseInt(process.version.replace(/^v/, '').split('.')[0], 10)
+if (major < 22) {
   throw new Error('This project requires Node.js >= 22.0.0')
 }
 

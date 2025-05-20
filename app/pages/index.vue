@@ -93,7 +93,7 @@ const _hasUnverifiedEmail = computed(() => user.value?.isVerified === false)
                 </h3>
                 <p>
                   We use <code>graphile-migrate</code> for database management. The initial migration sets up the user system.
-                  To customize it, run <code>yarn db uncommit</code> to move its content to current.sql.
+                  To customize it, run <code>bun db uncommit</code> to move its content to current.sql.
                 </p>
               </div>
 

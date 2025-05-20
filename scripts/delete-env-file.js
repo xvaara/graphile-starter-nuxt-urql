@@ -4,6 +4,7 @@ import fs from 'node:fs'
 try {
   fs.unlinkSync(`${import.meta.dirname}/../.env`)
 }
-catch {
-  /* NOOP */
+catch (err) {
+  if (err.code !== 'ENOENT')
+    throw err
 }

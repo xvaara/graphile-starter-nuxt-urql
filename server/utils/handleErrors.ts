@@ -53,7 +53,7 @@ export const ERROR_MESSAGE_OVERRIDES: { [code: string]: typeof pluck } = {
   }),
   23505: err => ({
     ...pluck(err),
-    message: 'Conflict occurred',
+    message: 'A conflict occurred',
     fields: conflictFieldsFromError(err),
     code: 'NUNIQ',
   }),

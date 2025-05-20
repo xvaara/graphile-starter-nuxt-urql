@@ -5,7 +5,8 @@ const { result, loading, error } = useOrganizationPageQuery({ slug: slug.value }
 
 // Throw 404 error if organization not found, but only after the query completes
 watchEffect(() => {
-  if (!loading && result.value && !result.value.organizationBySlug) {
+  console.log('onResult', result.value, loading.value, error.value)
+  if (!loading.value && result.value && !result.value.organizationBySlug) {
     throw createError({
       statusCode: 404,
       statusMessage: 'Organization Not Found',

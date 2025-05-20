@@ -4,9 +4,9 @@ import { globSync } from 'glob'
 import rimraf from 'rimraf'
 
 try {
-  await rimraf(globSync(path.join(import.meta.dirname, '../@app/*/dist')))
-  await rimraf(globSync(path.join(import.meta.dirname, '../@app/*/tsconfig.tsbuildinfo')))
-  await rimraf(globSync(path.join(import.meta.dirname, '../@app/client/.next')))
+  await rimraf(globSync(path.join(import.meta.dirname, '../.nuxt')))
+  await rimraf(globSync(path.join(import.meta.dirname, '../.output')))
+  await rimraf(globSync(path.join(import.meta.dirname, '../node_modules/.cache')))
   console.log('Deleted')
 }
 catch (e) {

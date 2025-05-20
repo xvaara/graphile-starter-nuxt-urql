@@ -14,13 +14,7 @@ export default defineNuxtPlugin((nuxt) => {
   const { vueApp } = nuxt
 
   // Cache implementation
-  const cache = new InMemoryCache({
-    typePolicies: {
-      Query: {
-        queryType: true,
-      },
-    },
-  })
+  const cache = new InMemoryCache()
 
   // when app is created in browser, restore SSR state from nuxt payload
   if (import.meta.client) {
@@ -50,12 +44,19 @@ export default defineNuxtPlugin((nuxt) => {
   }
   catch (err) {
     console.error('Failed to create GraphileApolloLink:', err)
+    if (err instanceof Error) {
+      throw new TypeError(`Could not initialize GraphileApolloLink for ApolloClient: ${err.message}`)
+    }
     throw new Error('Could not initialize GraphileApolloLink for ApolloClient')
   }
   const apolloClient = new ApolloClient({
     cache,
     link: errorLink.concat(graphileLink),
     ssrMode: true,
+    connectToDevTools: import.meta.dev,
+    devtools: {
+      enabled: import.meta.dev,
+    },
   })
 
   nuxt.provide('apollo', apolloClient)
