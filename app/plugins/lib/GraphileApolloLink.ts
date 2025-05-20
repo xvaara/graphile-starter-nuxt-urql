@@ -12,6 +12,7 @@ import {
 } from '@apollo/client'
 import { execute, hookArgs, isAsyncIterable } from 'grafast'
 import { getOperationAST, parse, print } from 'graphql'
+import { LRUCache } from 'lru-cache'
 
 export interface GraphileApolloLinkInterface {
   /** The event object. */
@@ -24,14 +25,14 @@ export interface GraphileApolloLinkInterface {
 // TODO: This is a hack
 // https://discord.com/channels/489127045289476126/498852330754801666/1373200934150344724
 
-const cache: Record<string, DocumentNode> = {}
+const cache = new LRUCache<string, DocumentNode>({ max: 300 })
 function cachedParse(text: string) {
-  if (cache[text]) {
-    return cache[text]
+  if (cache.has(text)) {
+    return cache.get(text) as DocumentNode
   }
   else {
     const doc = parse(text)
-    cache[text] = doc
+    cache.set(text, doc)
     return doc
   }
 }

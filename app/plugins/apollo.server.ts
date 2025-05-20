@@ -12,7 +12,6 @@ const ssrKey = '__apollo_ssr__'
 
 export default defineNuxtPlugin((nuxt) => {
   const { vueApp } = nuxt
-  // const rootUrl = useRuntimeConfig().public.rootUrl
 
   // Cache implementation
   const cache = new InMemoryCache({
@@ -40,16 +39,22 @@ export default defineNuxtPlugin((nuxt) => {
     logErrorMessages(error)
   })
   if (!nuxt.ssrContext?.event) {
-    throw new Error('No event')
+    throw new Error('No event found in Nuxt SSR context, which is required for GraphQL operations')
+  }
+  let graphileLink
+  try {
+    graphileLink = new GraphileApolloLink({
+      event: nuxt.ssrContext?.event,
+      pgl,
+    })
+  }
+  catch (err) {
+    console.error('Failed to create GraphileApolloLink:', err)
+    throw new Error('Could not initialize GraphileApolloLink for ApolloClient')
   }
   const apolloClient = new ApolloClient({
     cache,
-    link: errorLink.concat(
-      new GraphileApolloLink({
-        event: nuxt.ssrContext?.event,
-        pgl,
-      }),
-    ),
+    link: errorLink.concat(graphileLink),
     ssrMode: true,
   })
 

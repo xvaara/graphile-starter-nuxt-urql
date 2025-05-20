@@ -63,10 +63,6 @@ export default defineNuxtPlugin((nuxt) => {
   const splitLink = split(
     ({ query }) => {
       const definition = getMainDefinition(query)
-      // if (definition.kind === 'OperationDefinition'
-      //   && definition.operation === 'subscription') {
-      //   console.log(`Subscribing to ${definition.name?.value ?? 'anonymous'}`)
-      // }
       return (
         definition.kind === 'OperationDefinition'
         && definition.operation === 'subscription'
@@ -78,15 +74,30 @@ export default defineNuxtPlugin((nuxt) => {
 
   // Handle errors
   const errorLink = onError((error) => {
+    const { graphQLErrors, networkError, operation } = error
+
+    if (graphQLErrors) {
+      graphQLErrors.forEach(({ message, locations, path }) => {
+        console.error(
+          `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}, Operation: ${operation.operationName}`,
+        )
+      })
+    }
+
+    if (networkError) {
+      console.error(`[Network error]: ${networkError}`)
+    }
+
+    // Still use the standard logging
     logErrorMessages(error)
   })
 
   const apolloClient = new ApolloClient({
     cache,
     link: errorLink.concat(splitLink),
-    connectToDevTools: true,
+    connectToDevTools: import.meta.dev,
     devtools: {
-      enabled: true,
+      enabled: import.meta.dev,
     },
   })
 

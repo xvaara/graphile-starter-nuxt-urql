@@ -1,6 +1,6 @@
-const { spawnSync } = require('node:child_process')
+import { spawnSync } from 'node:child_process'
 
-function runSync(cmd, args, options = {}) {
+export function runSync(cmd, args, options = {}) {
   const result = spawnSync(cmd, args, {
     stdio: ['inherit', 'inherit', 'inherit'],
     windowsHide: true,
@@ -37,7 +37,7 @@ function runSync(cmd, args, options = {}) {
     else {
       throw new Error(
         `Process exited due to signal '${signal}' (running '${cmd} ${
-          args ? args.join(' ') : null
+          args ? args.join(' ') : ''
         }')`,
       )
     }
@@ -45,5 +45,3 @@ function runSync(cmd, args, options = {}) {
 
   return result
 }
-
-exports.runSync = runSync

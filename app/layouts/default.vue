@@ -79,7 +79,7 @@ function handleLogout() {
                 icon="i-heroicons-user-circle"
                 trailing-icon="i-heroicons-chevron-down"
               >
-                {{ user?.name }}
+                {{ user?.name || user?.username }}
               </UButton>
             </UDropdownMenu>
           </template>

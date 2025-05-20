@@ -23,7 +23,11 @@ async function handleAccept() {
         icon: 'i-heroicons-check-circle',
         color: 'success',
       })
-      setTimeout(() => router.push(`/o/${invitationData.value?.organizationForInvitation?.slug}`), 1000)
+      const slug = invitationData.value?.organizationForInvitation?.slug
+      if (slug)
+        setTimeout(() => router.push(`/o/${slug}`), 1000)
+      else
+        setTimeout(() => router.push('/'), 1000)
     }
     else {
       toast.add({

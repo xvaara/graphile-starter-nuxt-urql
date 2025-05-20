@@ -1,5 +1,3 @@
-import type {} from 'postgraphile'
-
 const PrimaryKeyMutationsOnlyPlugin: GraphileConfig.Plugin = {
   name: 'PrimaryKeyMutationsOnlyPlugin',
   version: '0.0.0',

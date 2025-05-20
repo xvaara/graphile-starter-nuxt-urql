@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const fs = require('node:fs')
+import fs from 'node:fs'
 
 try {
   fs.unlinkSync(`${import.meta.dirname}/../.env`)

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-const {
-  yarnCmd,
-  runMain,
+import {
   checkGit,
   outro,
-  withDotenvUpdater,
-  updateDotenv,
+  pkgMgrCmd,
   readDotenv,
+  runMain,
+  updateDotenv,
+  withDotenvUpdater,
   // runSync,
-} = require('./_setup_utils.cjs')
+} from './_setup_utils.js'
 
 runMain(async () => {
   await checkGit()
@@ -23,14 +23,13 @@ runMain(async () => {
       validate: name =>
         /^[a-z][a-z0-9_]+$/.test(name)
           ? true
-          : 'That doesn\'t look like a good name for a database, try something simpler - just lowercase alphanumeric and underscores',
+          : `That doesn't look like a good name for a database; use only lowercase letters, numbers, and underscores.`,
       when: !config.DATABASE_NAME,
     },
     {
       type: 'input',
       name: 'DATABASE_HOST',
-      message:
-        'What\'s the hostname of your database server (include :port if it\'s not the default :5432)?',
+      message: `What's the hostname of your database server (include :port if it's not the default :5432)?`,
       default: 'localhost',
       when: !('DATABASE_HOST' in config),
     },
@@ -61,7 +60,7 @@ runMain(async () => {
     }))
 
   // And perform setup
-  // runSync(yarnCmd, ["server", "build"]);
+  // runSync(pkgMgrCmd, ["server", "build"]);
 
   if (process.argv[2] === 'auto') {
     // We're advancing automatically
@@ -74,7 +73,7 @@ runMain(async () => {
 
 🚀 The next step is to set up the database, run:
 
-  ${yarnCmd} setup:db
+  ${pkgMgrCmd} setup:db
 
 If you're not using graphile-migrate, then you should run your preferred migration framework now.  This step should also include creating the necessary schemas and roles.  Consult the generated .env file for what is needed.`)
   }

@@ -1,4 +1,7 @@
-const { spawn } = require('node:child_process')
+import { spawn } from 'node:child_process'
+import { resolve } from 'node:path'
+
+const schemaPath = resolve(import.meta.dirname, '../../data/schema.sql')
 
 if (process.env.IN_TESTS === '1') {
   process.exit(0)
@@ -12,7 +15,7 @@ if (!connectionString) {
   process.exit(1)
 }
 
-spawn(
+const dumpProcess = spawn(
   process.env.PG_DUMP || 'pg_dump',
   [
     '--no-sync',
@@ -20,7 +23,7 @@ spawn(
     '--no-owner',
     '--exclude-schema=graphile_migrate',
     '--exclude-schema=graphile_worker',
-    '--file=../../data/schema.sql',
+    `--file=${schemaPath}`,
     connectionString,
   ],
   {
@@ -28,3 +31,4 @@ spawn(
     shell: true,
   },
 )
+dumpProcess.on('close', code => process.exit(code))

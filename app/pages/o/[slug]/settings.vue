@@ -7,9 +7,9 @@ const slug = computed(() => route.params.slug as string)
 const currentTab = ref('general')
 
 // General settings state and mutations
-const { result: orgData, loading } = useOrganizationPageQuery({
+const { result: orgData, loading, onResult } = useOrganizationPageQuery(() => ({
   slug: slug.value,
-})
+}))
 
 // Throw 404 error if organization not found, but only after the query completes
 watchEffect(() => {
@@ -39,10 +39,10 @@ const generalState = reactive({
   slug: '',
 })
 
-watchEffect(() => {
-  if (orgData.value?.organizationBySlug) {
-    generalState.name = orgData.value.organizationBySlug.name
-    generalState.slug = orgData.value.organizationBySlug.slug
+onResult(({ data }) => {
+  if (data?.organizationBySlug) {
+    generalState.name = data.organizationBySlug.name
+    generalState.slug = data.organizationBySlug.slug
   }
 })
 
@@ -102,6 +102,9 @@ async function handleGeneralSubmit() {
         icon: 'i-heroicons-check-circle',
         color: 'success',
       })
+      if (route.params.slug !== generalState.slug) {
+        navigateTo(`/o/${generalState.slug}/settings`, { replace: true })
+      }
     }
     else {
       toast.add({
@@ -132,19 +135,11 @@ async function handleInvite() {
   const isEmail = inviteText.includes('@')
 
   try {
-    const result = await inviteToOrganization({
+    await inviteToOrganization({
       organizationId: orgData.value?.organizationBySlug?.id,
       email: isEmail ? inviteText : null,
       username: isEmail ? null : inviteText,
     })
-    if (result?.errors?.[0]) {
-      toast.add({
-        title: 'Error',
-        description: result.errors[0].message,
-        color: 'error',
-      })
-      return
-    }
     toast.add({
       title: 'Success',
       description: `${inviteText} has been invited.`,
@@ -311,12 +306,12 @@ async function confirmDelete() {
           <UCard v-if="currentTab === 'general'" class="mt-4">
             <UForm :state="generalState" class="space-y-4" @submit="handleGeneralSubmit">
               <UFormField label="Name" name="name">
-                <UInput v-model="generalState.name" placeholder="Organization name" required />
+                <UInput v-model="generalState.name" placeholder="Organization name" required :disabled="loading" />
               </UFormField>
               <UFormField label="Slug" name="slug">
-                <UInput v-model="generalState.slug" placeholder="Organization slug" required />
+                <UInput v-model="generalState.slug" placeholder="Organization slug" required :disabled="loading" />
               </UFormField>
-              <UButton type="submit" color="primary" block :loading="updating">
+              <UButton type="submit" color="primary" block :loading="updating" :disabled="loading">
                 {{ updating ? 'Saving...' : 'Save Changes' }}
               </UButton>
             </UForm>
@@ -462,12 +457,14 @@ async function confirmDelete() {
               </UButton>
             </div>
           </UCard>
-          <UModal v-model="showDeleteModal" title="Delete Organization?" :closable="true">
-            <div class="space-y-4">
-              <div class="text-red-600">
-                <strong>Warning:</strong> This action cannot be undone. Are you sure you want to delete this organization?
+          <UModal v-model:open="showDeleteModal" title="Delete Organization?" :closable="true">
+            <template #body>
+              <div class="space-y-4">
+                <div class="text-red-600">
+                  <strong>Warning:</strong> This action cannot be undone. Are you sure you want to delete this organization?
+                </div>
               </div>
-            </div>
+            </template>
             <template #footer>
               <UButton color="error" :loading="deleting" @click="confirmDelete">
                 Delete

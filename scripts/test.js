@@ -1,15 +1,14 @@
 #!/usr/bin/env node
 
 // require("@app/config/env");
-const { execSync, spawnSync: rawSpawnSync } = require('node:child_process')
-const concurrently = require('concurrently')
+import { execSync, spawnSync as rawSpawnSync } from 'node:child_process'
+import concurrently from 'concurrently'
 
 function spawnSync(cmd, args, options) {
   const result = rawSpawnSync(cmd, args, {
     stdio: ['pipe', 'inherit', 'inherit'],
     env: {
       ...process.env,
-      // YARN_SILENT: "1",
       npm_config_loglevel: 'silent',
     },
     shell: true,
@@ -39,7 +38,7 @@ function spawnSync(cmd, args, options) {
     else {
       throw new Error(
         `Process exited due to signal '${signal}' (running '${cmd} ${
-          args ? args.join(' ') : null
+          args ? args.join(' ') : ''
         }')`,
       )
     }

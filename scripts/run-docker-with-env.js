@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-require('dotenv').config()
-const { runSync } = require('./lib/run')
+import dotenv from 'dotenv'
+import { runSync } from './lib/run.js'
+
+dotenv.config()
 
 const {
   DATABASE_OWNER,

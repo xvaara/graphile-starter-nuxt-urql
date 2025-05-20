@@ -66,12 +66,12 @@ const task: Task = async (inPayload) => {
     globalThis.TEST_EMAILS.push(info)
   }
   else if (isDev) {
-    const url = nodemailer.getTestMessageUrl(info)
-    if (url) {
+    const previewUrl = nodemailer.getTestMessageUrl(info)
+    if (previewUrl) {
       // Hex codes here equivalent to chalk.blue.underline
       // eslint-disable-next-line no-console
       console.log(
-        `Development email preview: \x1B[34m\x1B[4m${url}\x1B[24m\x1B[39m`,
+        `Development email preview: \x1B[34m\x1B[4m${previewUrl}\x1B[24m\x1B[39m`,
       )
     }
   }
@@ -86,7 +86,8 @@ const templatePromises: Record<
 function loadTemplate(template: string) {
   if (isDev || !templatePromises[template]) {
     templatePromises[template] = (async () => {
-      if (!template.match(/^[\w.-]+$/)) {
+      // Disallow `..` segments and double-check the resolved path
+      if (!template.match(/^[\w.-]+$/) || template.includes('..')) {
         throw new Error(`Disallowed template name '${template}'`)
       }
       const templateString = await readFile(

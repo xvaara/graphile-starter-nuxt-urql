@@ -1,7 +1,8 @@
 <script setup lang="ts">
 definePageMeta({ public: false })
+const toast = useToast()
 
-const { data, loading, error } = await useSettingsEmailsQuery()
+const { result, loading, error } = useSettingsEmailsQuery()
 const showAddEmailForm = ref(false)
 const newEmail = ref('')
 const addEmailError = ref('')
@@ -20,15 +21,39 @@ async function addEmail() {
 }
 const { mutate: deleteEmailMutation } = useDeleteEmailMutation()
 async function deleteEmail(id: string) {
-  await deleteEmailMutation({ emailId: id })
+  try {
+    await deleteEmailMutation({ emailId: id })
+  }
+  catch (e: Error | unknown) {
+    toast.add({
+      title: 'Error',
+      description: e instanceof Error ? e.message : String(e),
+    })
+  }
 }
 const { mutate: makePrimaryMutation } = useMakeEmailPrimaryMutation()
 async function makePrimary(id: string) {
-  await makePrimaryMutation({ emailId: id })
+  try {
+    await makePrimaryMutation({ emailId: id })
+  }
+  catch (e: Error | unknown) {
+    toast.add({
+      title: 'Error',
+      description: e instanceof Error ? e.message : String(e),
+    })
+  }
 }
 const { mutate: resendVerificationMutation } = useResendEmailVerificationMutation()
 async function resendVerification(id: string) {
-  await resendVerificationMutation({ emailId: id })
+  try {
+    await resendVerificationMutation({ emailId: id })
+  }
+  catch (e: Error | unknown) {
+    toast.add({
+      title: 'Error',
+      description: e instanceof Error ? e.message : String(e),
+    })
+  }
 }
 </script>
 
@@ -47,14 +72,14 @@ async function resendVerification(id: string) {
         Error loading emails
       </div>
       <ul v-else class="space-y-4">
-        <li v-for="email in data?.currentUser?.userEmails?.nodes || []" :key="email.id" class="flex items-center justify-between">
+        <li v-for="email in result?.currentUser?.userEmails?.nodes || []" :key="email.id" class="flex items-center justify-between">
           <span>
             {{ email.email }}
             <span v-if="email.isPrimary">(Primary)</span>
             <span v-else-if="!email.isVerified" class="text-red-500">(unverified)</span>
           </span>
           <div class="flex gap-2">
-            <UButton v-if="!email.isPrimary && (data?.currentUser?.userEmails?.nodes && data.currentUser.userEmails.nodes.length > 1)" color="error" @click="deleteEmail(email.id)">
+            <UButton v-if="!email.isPrimary && (result?.currentUser?.userEmails?.nodes && result.currentUser.userEmails.nodes.length > 1)" color="error" @click="deleteEmail(email.id)">
               Delete
             </UButton>
             <UButton v-if="!email.isVerified" color="primary" @click="resendVerification(email.id)">

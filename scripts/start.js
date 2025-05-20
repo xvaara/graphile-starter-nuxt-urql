@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-const { spawn } = require('node:child_process')
-const fs = require('node:fs')
+import { spawn } from 'node:child_process'
+import fs from 'node:fs'
 
 const ENVFILE = `${import.meta.dirname}/../.env`
 

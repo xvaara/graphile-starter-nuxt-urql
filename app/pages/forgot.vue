@@ -35,7 +35,7 @@ async function handleSubmit() {
       })
     }
   }
-  catch (e: Error | unknown) {
+  catch (e: unknown) {
     toast.add({
       title: 'An error occurred',
       description: e instanceof Error ? e.message : String(e),

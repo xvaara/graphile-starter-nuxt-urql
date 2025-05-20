@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-const dotenv = require('dotenv')
-const pg = require('pg')
-const {
-  yarnCmd,
-  runMain,
+import dotenv from 'dotenv'
+import pg from 'pg'
+import {
   checkGit,
   outro,
-  runSync,
+  pkgMgrCmd,
   projectName,
-} = require('./_setup_utils.cjs')
+  runMain,
+  runSync,
+} from './_setup_utils.js'
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -16,7 +16,7 @@ runMain(async () => {
   await checkGit()
 
   // Ensure server build has been run
-  // runSync(yarnCmd, ["server", "build"]);
+  // runSync(pkgMgrCmd, ["server", "build"]);
 
   // Source our environment
   dotenv.config({ path: `${import.meta.dirname}/../.env` })
@@ -128,8 +128,8 @@ runMain(async () => {
   }
   await pgPool.end()
 
-  runSync(yarnCmd, ['run', 'db:reset', '-- --erase'])
-  runSync(yarnCmd, ['run', 'db:reset', '-- --shadow', '--erase'])
+  runSync(pkgMgrCmd, ['db:reset', '--erase'])
+  runSync(pkgMgrCmd, ['db:reset', '--shadow', '--erase'])
 
   outro(`\
 ✅ Setup success
@@ -139,6 +139,6 @@ runMain(async () => {
 ${
   projectName
     ? '  export UID; docker-compose up server' // Probably Docker setup
-    : `  ${yarnCmd} start`
+    : `  ${pkgMgrCmd} start`
 }`)
 })

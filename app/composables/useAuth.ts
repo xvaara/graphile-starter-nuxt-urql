@@ -4,7 +4,7 @@ export function useAuth() {
 
   // Ensure we're in a Vue lifecycle context
   if (!getCurrentInstance()) {
-    throw new Error('useUser must be called within a Vue component setup function')
+    throw new Error('useAuth must be called within a Vue component setup function')
   }
 
   const { result, refetch, onResult } = useSharedQuery()
@@ -48,8 +48,9 @@ export function useAuth() {
       })
   }
   async function refetchUser() {
-    await refetch()
-    user.value = result.value?.currentUser as SharedLayout_UserFragment
+    const data = await refetch()
+    user.value = data?.data?.currentUser as SharedLayout_UserFragment
+    return user.value
   }
 
   return {

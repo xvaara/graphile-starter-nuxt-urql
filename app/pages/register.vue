@@ -37,10 +37,13 @@ const validateUsername = computed(() => {
     return true
   if (state.username.length < 2 || state.username.length > 24)
     return false
+  // check that username starts with a letter
   if (!/^[a-z]|$/i.test(state.username))
     return false
+  // Checks that underscores aren't adjacent (except at the end)
   if (!/^(?:[^_]|_[^_]|_$)*$/.test(state.username))
     return false
+  // Ensures username only contains alphanumeric characters and underscores
   if (!/^\w*$/.test(state.username))
     return false
   return true

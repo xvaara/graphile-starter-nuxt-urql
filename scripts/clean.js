@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-const path = require('node:path')
-const { globSync } = require('glob')
-const { default: rimraf } = require('rimraf')
+import path from 'node:path'
+import { globSync } from 'glob'
+import rimraf from 'rimraf'
 
 try {
   await rimraf(globSync(path.join(import.meta.dirname, '../@app/*/dist')))

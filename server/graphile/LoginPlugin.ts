@@ -154,7 +154,7 @@ const PassportLoginPlugin = makeExtendSchemaPlugin((build) => {
             pgSettings!['jwt.claims.session_id'] = details.session_id
 
             // Tell Passport.js we're logged in
-            await login({ session_id: details.session_id })
+            await login({ secure: { session_id: details.session_id } })
           }
 
           return {

@@ -1,10 +1,10 @@
-const fsp = require('node:fs').promises
-const path = require('node:path')
-const dotenv = require('dotenv')
+import { promises as fsp } from 'node:fs'
+import path from 'node:path'
+import dotenv from 'dotenv'
 
 const DOTENV_PATH = path.join(import.meta.dirname, '../../.env')
 
-async function readDotenv() {
+export async function readDotenv() {
   let buffer = null
   try {
     buffer = await fsp.readFile(DOTENV_PATH)
@@ -35,7 +35,7 @@ function encodeDotenvValue(str) {
   return str
 }
 
-async function withDotenvUpdater(overrides, callback) {
+export async function withDotenvUpdater(overrides, callback) {
   let data
   try {
     data = await fsp.readFile(DOTENV_PATH, 'utf8')
@@ -89,6 +89,3 @@ async function withDotenvUpdater(overrides, callback) {
 
   await fsp.writeFile(DOTENV_PATH, data)
 }
-
-exports.readDotenv = readDotenv
-exports.withDotenvUpdater = withDotenvUpdater

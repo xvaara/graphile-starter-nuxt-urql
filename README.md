@@ -44,11 +44,19 @@ Use at your own risk. Probably not ready for production.
 
 ## Usage
 
-Setup env, database and start the dev server
+### bun
+
+This version uses [Bun](https://bun.sh) as package manager and task runner. Install bun:
 
 ```bash
-npm run setup
-npm run dev
+npm install -g bun
+```
+
+### Setup env, database and start the dev server
+
+```bash
+bun setup
+bun dev
 ```
 
 ## Please sponsor Benjie

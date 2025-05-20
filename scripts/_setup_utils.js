@@ -1,26 +1,22 @@
-if (Number.parseInt(process.version.split('.')[0], 10) < 10) {
-  throw new Error('This project requires Node.js >= 10.0.0')
+import { promises as fsp } from 'node:fs'
+import os from 'node:os'
+import { safeRandomString } from './lib/random.js'
+
+export { readDotenv, withDotenvUpdater } from './lib/dotenv.js'
+export { runSync } from './lib/run.js'
+
+if (Number.parseInt(process.version.split('.')[0], 10) < 22) {
+  throw new Error('This project requires Node.js >= 22.0.0')
 }
 
-const fsp = require('node:fs').promises
-const { withDotenvUpdater, readDotenv } = require('./lib/dotenv.cjs')
-const { safeRandomString } = require('./lib/random.cjs')
-const { runSync } = require('./lib/run.cjs')
-
 // fixes runSync not throwing ENOENT on windows
-const platform = require('node:os').platform()
+const platform = os.platform()
 
-const yarnCmd = platform === 'win32' ? 'npm.cmd' : 'npm'
+export const pkgMgrCmd = platform === 'win32' ? 'bun.cmd' : 'bun'
 
-const projectName = process.env.PROJECT_NAME
+export const projectName = process.env.PROJECT_NAME
 
-exports.withDotenvUpdater = withDotenvUpdater
-exports.readDotenv = readDotenv
-exports.runSync = runSync
-exports.yarnCmd = yarnCmd
-exports.projectName = projectName
-
-exports.updateDotenv = function updateDotenv(add, answers) {
+export function updateDotenv(add, answers) {
   const PASSWORDS = {
     DATABASE_OWNER_PASSWORD: safeRandomString(30),
     DATABASE_AUTHENTICATOR_PASSWORD: safeRandomString(30),
@@ -147,49 +143,35 @@ exports.updateDotenv = function updateDotenv(add, answers) {
 # The name of the folder you cloned graphile-starter to (so we can run docker-compose inside a container):`,
     )
   }
-  // add the postgresql urls to the env file
-  // add urls
-  //   process.env.DATABASE_URL = process.env.DATABASE_URL
-  //   ? process.env.DATABASE_URL
-  //   : `postgres://${process.env.DATABASE_OWNER}:${process.env.DATABASE_OWNER_PASSWORD}@${process.env.DATABASE_HOST}/${process.env.DATABASE_NAME}`;
-  // process.env.AUTH_DATABASE_URL = process.env.AUTH_DATABASE_URL
-  //   ? process.env.AUTH_DATABASE_URL
-  //   : `postgres://${process.env.DATABASE_AUTHENTICATOR}:${process.env.DATABASE_AUTHENTICATOR_PASSWORD}@${process.env.DATABASE_HOST}/${process.env.DATABASE_NAME}`;
-  // process.env.SHADOW_DATABASE_URL = process.env.SHADOW_DATABASE_URL
-  //   ? process.env.SHADOW_DATABASE_URL
-  //   : `postgres://${process.env.DATABASE_OWNER}:${process.env.DATABASE_OWNER_PASSWORD}@${process.env.DATABASE_HOST}/${process.env.DATABASE_NAME}_shadow`;
-  // process.env.SHADOW_AUTH_DATABASE_URL = process.env.SHADOW_AUTH_DATABASE_URL
-  //   ? process.env.SHADOW_AUTH_DATABASE_URL
-  //   : `postgres://${process.env.DATABASE_AUTHENTICATOR}:${process.env.DATABASE_AUTHENTICATOR_PASSWORD}@${process.env.DATABASE_HOST}/${process.env.DATABASE_NAME}_shadow`;
 
   add(
     'DATABASE_URL',
-    `postgres://${answers.DATABASE_OWNER}:${PASSWORDS.DATABASE_OWNER_PASSWORD}@${answers.DATABASE_HOST}/${answers.DATABASE_NAME}`,
+    `postgres://${answers.DATABASE_NAME}:${PASSWORDS.DATABASE_OWNER_PASSWORD}@${answers.DATABASE_HOST}/${answers.DATABASE_NAME}`,
     `\
   # The database URL for the PostGraphile database user owns the database.`,
   )
   add(
     'AUTH_DATABASE_URL',
-    `postgres://${answers.DATABASE_AUTHENTICATOR}:${PASSWORDS.DATABASE_AUTHENTICATOR_PASSWORD}@${answers.DATABASE_HOST}/${answers.DATABASE_NAME}`,
+    `postgres://${answers.DATABASE_NAME}_authenticator:${PASSWORDS.DATABASE_AUTHENTICATOR_PASSWORD}@${answers.DATABASE_HOST}/${answers.DATABASE_NAME}`,
     `\
   # The database URL for the PostGraphile database user (which has very limited
   # privileges, but can switch into the DATABASE_VISITOR role)`,
   )
   add(
     'SHADOW_DATABASE_URL',
-    `postgres://${answers.DATABASE_OWNER}:${PASSWORDS.DATABASE_OWNER_PASSWORD}@${answers.DATABASE_HOST}/${answers.DATABASE_NAME}_shadow`,
+    `postgres://${answers.DATABASE_NAME}:${PASSWORDS.DATABASE_OWNER_PASSWORD}@${answers.DATABASE_HOST}/${answers.DATABASE_NAME}_shadow`,
     `\
 # Shadow database URL (used for migrations, not used in production)`,
   )
   add(
     'SHADOW_AUTH_DATABASE_URL',
-    `postgres://${answers.DATABASE_AUTHENTICATOR}:${PASSWORDS.DATABASE_AUTHENTICATOR_PASSWORD}@${answers.DATABASE_HOST}/${answers.DATABASE_NAME}_shadow`,
+    `postgres://${answers.DATABASE_NAME}_authenticator:${PASSWORDS.DATABASE_AUTHENTICATOR_PASSWORD}@${answers.DATABASE_HOST}/${answers.DATABASE_NAME}_shadow`,
     `\
 # Shadow database URL (used for migrations, not used in production)`,
   )
   add(
     'TEST_DATABASE_URL',
-    `postgres://${answers.DATABASE_OWNER}:${PASSWORDS.DATABASE_OWNER_PASSWORD}@${answers.DATABASE_HOST}/${answers.DATABASE_NAME}_test`,
+    `postgres://${answers.DATABASE_NAME}:${PASSWORDS.DATABASE_OWNER_PASSWORD}@${answers.DATABASE_HOST}/${answers.DATABASE_NAME}_test`,
     `\
 # Test database URL for development and testing purposes`,
   )
@@ -202,7 +184,7 @@ exports.updateDotenv = function updateDotenv(add, answers) {
   )
   add(
     'EMAIL_FROM',
-    `"PostGraphile Starter" <no-reply@examples.graphile.org>'`,
+    `"PostGraphile Starter" <no-reply@examples.graphile.org>`,
     `\
 # Email is sent from this address.
 `,
@@ -223,7 +205,7 @@ exports.updateDotenv = function updateDotenv(add, answers) {
   )
 }
 
-exports.checkGit = async function checkGit() {
+export async function checkGit() {
   try {
     const gitStat = await fsp.stat(`${import.meta.dirname}/../.git`)
     if (!gitStat || !gitStat.isDirectory()) {
@@ -252,14 +234,14 @@ exports.checkGit = async function checkGit() {
   }
 }
 
-exports.runMain = (main) => {
+export function runMain(main) {
   main().catch((e) => {
     console.error(e)
     process.exit(1)
   })
 }
 
-exports.outro = (message) => {
+export function outro(message) {
   console.log()
   console.log()
   console.log('____________________________________________________________')
