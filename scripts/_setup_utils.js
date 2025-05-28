@@ -124,18 +124,6 @@ export function updateDotenv(add, answers) {
 # Client Secret:`,
   )
 
-  const nodeVersion = Number.parseInt(
-    process.version.replace(/\..*$/, '').replace(/\D/g, ''),
-    10,
-  )
-
-  add(
-    'GRAPHILE_TURBO',
-    nodeVersion >= 12 ? '1' : '',
-    `\
-# Set to 1 only if you're on Node v12 of higher; enables advanced optimisations:`,
-  )
-
   if (projectName) {
     add(
       'COMPOSE_PROJECT_NAME',
@@ -149,14 +137,14 @@ export function updateDotenv(add, answers) {
     'DATABASE_URL',
     `postgres://${answers.DATABASE_NAME}:${PASSWORDS.DATABASE_OWNER_PASSWORD}@${answers.DATABASE_HOST}/${answers.DATABASE_NAME}`,
     `\
-  # The database URL for the PostGraphile database user owns the database.`,
+# The database URL for the PostGraphile database user owns the database.`,
   )
   add(
     'AUTH_DATABASE_URL',
     `postgres://${answers.DATABASE_NAME}_authenticator:${PASSWORDS.DATABASE_AUTHENTICATOR_PASSWORD}@${answers.DATABASE_HOST}/${answers.DATABASE_NAME}`,
     `\
-  # The database URL for the PostGraphile database user (which has very limited
-  # privileges, but can switch into the DATABASE_VISITOR role)`,
+# The database URL for the PostGraphile database user (which has very limited
+# privileges, but can switch into the DATABASE_VISITOR role)`,
   )
   add(
     'SHADOW_DATABASE_URL',
