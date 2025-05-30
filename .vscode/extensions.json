@@ -13,6 +13,7 @@
     "vitest.explorer",
     "antfu.vite",
     "lokalise.i18n-ally",
-    "apollographql.vscode-apollo"
+    "graphql.vscode-graphql-syntax",
+    "graphql.vscode-graphql"
   ]
 }

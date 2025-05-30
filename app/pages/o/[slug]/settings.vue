@@ -1,13 +1,154 @@
 <script setup lang="ts">
+import { useMutation, useQuery } from '@vue/apollo-composable'
+import { SharedLayoutQueryFragment } from '~/composables/useAuth'
+import { graphql, useFragment } from '~/graphql'
+
 const route = useRoute()
 const toast = useToast()
 const slug = computed(() => route.params.slug as string)
+
+// Define the OrganizationPage_Organization fragment
+const OrganizationPageOrganizationFragment = graphql(`
+  fragment OrganizationPage_Organization on Organization {
+    id
+    name
+    slug
+    currentUserIsOwner
+    currentUserIsBillingContact
+  }
+`)
+
+// Define the OrganizationPage_Query fragment
+const OrganizationPageQueryFragment = graphql(`
+  fragment OrganizationPage_Query on Query {
+    ...SharedLayout_Query
+    organizationBySlug(slug: $slug) {
+      id
+      ...OrganizationPage_Organization
+    }
+  }
+`)
+
+// Define the OrganizationPage query
+const OrganizationPageQuery = graphql(`
+  query OrganizationPage($slug: String!) {
+    ...OrganizationPage_Query
+  }
+`)
+
+// Simplified members query without complex fragments
+const OrganizationMembersQuery = graphql(`
+  query OrganizationMembers($slug: String!, $offset: Int = 0) {
+    organizationBySlug(slug: $slug) {
+      id
+      name
+      slug
+      currentUserIsOwner
+      organizationMemberships(
+        first: 10
+        offset: $offset
+        orderBy: [MEMBER_NAME_ASC]
+      ) {
+        nodes {
+          id
+          createdAt
+          isOwner
+          isBillingContact
+          user {
+            id
+            username
+            name
+          }
+        }
+        totalCount
+      }
+    }
+  }
+`)
+
+// Define all the mutations used in this component
+const UpdateOrganizationMutation = graphql(`
+  mutation UpdateOrganization($input: UpdateOrganizationInput!) {
+    updateOrganization(input: $input) {
+      organization {
+        id
+        slug
+        name
+      }
+    }
+  }
+`)
+
+const DeleteOrganizationMutation = graphql(`
+  mutation DeleteOrganization($organizationId: UUID!) {
+    deleteOrganization(input: { organizationId: $organizationId }) {
+      clientMutationId
+    }
+  }
+`)
+
+const InviteToOrganizationMutation = graphql(`
+  mutation InviteToOrganization(
+    $organizationId: UUID!
+    $email: String
+    $username: String
+  ) {
+    inviteToOrganization(
+      input: {
+        organizationId: $organizationId
+        email: $email
+        username: $username
+      }
+    ) {
+      clientMutationId
+    }
+  }
+`)
+
+const RemoveFromOrganizationMutation = graphql(`
+  mutation RemoveFromOrganization($organizationId: UUID!, $userId: UUID!) {
+    removeFromOrganization(
+      input: { organizationId: $organizationId, userId: $userId }
+    ) {
+      clientMutationId
+    }
+  }
+`)
+
+const TransferOrganizationOwnershipMutation = graphql(`
+  mutation TransferOrganizationOwnership($organizationId: UUID!, $userId: UUID!) {
+    transferOrganizationOwnership(
+      input: { organizationId: $organizationId, userId: $userId }
+    ) {
+      organization {
+        id
+        currentUserIsOwner
+      }
+    }
+  }
+`)
+
+const TransferOrganizationBillingContactMutation = graphql(`
+  mutation TransferOrganizationBillingContact(
+    $organizationId: UUID!
+    $userId: UUID!
+  ) {
+    transferOrganizationBillingContact(
+      input: { organizationId: $organizationId, userId: $userId }
+    ) {
+      organization {
+        id
+        currentUserIsBillingContact
+      }
+    }
+  }
+`)
 
 // Tab state
 const currentTab = ref('general')
 
 // General settings state and mutations
-const { result: orgData, loading, onResult } = useOrganizationPageQuery(() => ({
+const { result: orgData, loading, onResult } = useQuery(OrganizationPageQuery, () => ({
   slug: slug.value,
 }))
 
@@ -16,19 +157,34 @@ const generalState = reactive({
   slug: '',
 })
 
+// Use fragment masking to access the query data and then the organization data
+const queryData = computed(() => {
+  if (!orgData.value)
+    return null
+  return useFragment(OrganizationPageQueryFragment, orgData.value)
+})
+
+const organization = computed(() => {
+  if (!queryData.value?.organizationBySlug)
+    return null
+  return useFragment(OrganizationPageOrganizationFragment, queryData.value.organizationBySlug)
+})
+
 await new Promise<void>(resolve => onResult(({ data }) => {
-  if (data?.organizationBySlug) {
-    generalState.name = data.organizationBySlug.name
-    generalState.slug = data.organizationBySlug.slug
+  if (data) {
+    const queryFragment = useFragment(OrganizationPageQueryFragment, data)
+    if (queryFragment.organizationBySlug) {
+      const orgFragment = useFragment(OrganizationPageOrganizationFragment, queryFragment.organizationBySlug)
+      generalState.name = orgFragment.name
+      generalState.slug = orgFragment.slug
+    }
   }
   resolve()
 }))
 
-console.log('orgData', orgData.value)
-
 // Throw 404 error if organization not found, but only after the query completes
 watchEffect(() => {
-  if (!loading.value && orgData.value && !orgData.value.organizationBySlug) {
+  if (!loading.value && orgData.value && !queryData.value?.organizationBySlug) {
     throw createError({
       statusCode: 404,
       statusMessage: 'Organization Not Found',
@@ -36,7 +192,7 @@ watchEffect(() => {
       fatal: true,
     })
   }
-  if (!loading.value && !orgData.value?.organizationBySlug?.currentUserIsOwner) {
+  if (!loading.value && !organization.value?.currentUserIsOwner) {
     throw createError({
       statusCode: 403,
       statusMessage: 'Forbidden',
@@ -46,8 +202,8 @@ watchEffect(() => {
   }
 })
 
-const { mutate: updateOrganization, loading: updating } = useUpdateOrganizationMutation()
-const { mutate: deleteOrganization, loading: deleting } = useDeleteOrganizationMutation()
+const { mutate: updateOrganization, loading: updating } = useMutation(UpdateOrganizationMutation)
+const { mutate: deleteOrganization, loading: deleting } = useMutation(DeleteOrganizationMutation)
 
 // Members state and mutations
 const page = ref(1)
@@ -58,20 +214,20 @@ const inviteForm = ref({
 })
 const inviteInProgress = ref(false)
 
-const { result: membersData, loading: membersFetching, error: membersError } = useOrganizationMembersQuery(() => ({
-  slug: slug.value,
+const { result: membersData, loading: membersFetching, error: membersError } = useQuery(OrganizationMembersQuery, () => ({
+  slug: slug.value as string,
   offset: (page.value - 1) * RESULTS_PER_PAGE,
 }))
 
-const { mutate: inviteToOrganization } = useInviteToOrganizationMutation()
-const { mutate: removeMember } = useRemoveFromOrganizationMutation()
-const { mutate: transferOwnership } = useTransferOrganizationOwnershipMutation()
-const { mutate: transferBillingContact } = useTransferOrganizationBillingContactMutation()
+const { mutate: inviteToOrganization } = useMutation(InviteToOrganizationMutation)
+const { mutate: removeMember } = useMutation(RemoveFromOrganizationMutation)
+const { mutate: transferOwnership } = useMutation(TransferOrganizationOwnershipMutation)
+const { mutate: transferBillingContact } = useMutation(TransferOrganizationBillingContactMutation)
 
 // General settings handlers
 async function handleGeneralSubmit() {
   try {
-    if (!orgData.value?.organizationBySlug) {
+    if (!organization.value) {
       toast.add({
         title: 'Organization not found',
         description: 'Please check the organization slug.',
@@ -91,7 +247,7 @@ async function handleGeneralSubmit() {
     }
     const result = await updateOrganization({
       input: {
-        id: orgData.value.organizationBySlug.id,
+        id: organization.value.id,
         patch: {
           name: generalState.name,
           slug: generalState.slug,
@@ -139,7 +295,7 @@ async function handleInvite() {
 
   try {
     await inviteToOrganization({
-      organizationId: orgData.value?.organizationBySlug?.id,
+      organizationId: organization.value?.id,
       email: isEmail ? inviteText : null,
       username: isEmail ? null : inviteText,
     })
@@ -165,7 +321,7 @@ async function handleInvite() {
 async function handleRemoveMember(userId: string) {
   try {
     await removeMember({
-      organizationId: orgData.value?.organizationBySlug?.id,
+      organizationId: organization.value?.id,
       userId,
     })
     toast.add({
@@ -186,7 +342,7 @@ async function handleRemoveMember(userId: string) {
 async function handleTransferOwnership(userId: string) {
   try {
     await transferOwnership({
-      organizationId: orgData.value?.organizationBySlug?.id,
+      organizationId: organization.value?.id,
       userId,
     })
     toast.add({
@@ -207,7 +363,7 @@ async function handleTransferOwnership(userId: string) {
 async function handleTransferBillingContact(userId: string) {
   try {
     await transferBillingContact({
-      organizationId: orgData.value?.organizationBySlug?.id,
+      organizationId: organization.value?.id,
       userId,
     })
     toast.add({
@@ -229,7 +385,7 @@ const showDeleteModal = ref(false)
 
 // Delete organization handler
 async function handleDelete() {
-  if (!orgData.value?.organizationBySlug) {
+  if (!organization.value) {
     toast.add({
       title: 'Organization not found',
       description: 'The organization you are trying to delete does not exist.',
@@ -243,7 +399,7 @@ async function handleDelete() {
 
 async function confirmDelete() {
   try {
-    if (!orgData.value?.organizationBySlug) {
+    if (!organization.value) {
       toast.add({
         title: 'Organization not found',
         description: 'The organization you are trying to delete does not exist.',
@@ -253,7 +409,7 @@ async function confirmDelete() {
       showDeleteModal.value = false
       return
     }
-    const result = await deleteOrganization({ organizationId: orgData.value.organizationBySlug.id })
+    const result = await deleteOrganization({ organizationId: organization.value.id })
     if (result?.data?.deleteOrganization) {
       toast.add({
         title: 'Organization deleted',

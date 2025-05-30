@@ -1,14 +1,53 @@
 <script setup lang="ts">
+import { useLazyQuery, useMutation } from '@vue/apollo-composable'
+import { graphql, useFragment } from '~/graphql'
+
 const toast = useToast()
 const router = useRouter()
+
+const CreatedOrganizationFragment = graphql(`
+  fragment CreatedOrganization on Organization {
+    id
+    name
+    slug
+  }
+`)
+
+const OrganizationBySlugQuery = graphql(`
+  query OrganizationBySlug($slug: String!) {
+    organizationBySlug(slug: $slug) {
+      id
+      name
+      slug
+    }
+  }
+`)
+
+const CreateOrganizationMutation = graphql(`
+  mutation CreateOrganization($name: String!, $slug: String!) {
+    createOrganization(input: { name: $name, slug: $slug }) {
+      organization {
+        id
+        ...CreatedOrganization
+      }
+      query {
+        organizationBySlug(slug: $slug) {
+          id
+          ...CreatedOrganization
+        }
+      }
+    }
+  }
+`)
 
 const state = reactive({
   name: '',
   slug: '',
 })
 
-const { mutate: createOrganization, loading } = useCreateOrganizationMutation()
-const { load: lookupOrganizationBySlug, result: existingOrganizationData, loading: slugLoading, error: slugError } = useOrganizationBySlugLazyQuery({ slug: state.slug })
+const { mutate: createOrganization, loading } = useMutation(CreateOrganizationMutation)
+const { load: lookupOrganizationBySlug, result: existingOrganizationData, loading: slugLoading, error: slugError } = useLazyQuery(OrganizationBySlugQuery, undefined)
+
 const slugCheckIsValid = ref(false)
 const organization = ref<{ id: string, name: string, slug: string } | null>(null)
 const formError = ref<unknown>(null)
@@ -18,7 +57,7 @@ watch(() => state.name, async (name) => {
   state.slug = (typeof slugify === 'function' ? slugify(name || '', { lower: true }) : name || '').replace(/\s+/g, '-').toLowerCase()
   slugCheckIsValid.value = false
   if (state.slug) {
-    await lookupOrganizationBySlug()
+    await lookupOrganizationBySlug(OrganizationBySlugQuery, { slug: state.slug })
     slugCheckIsValid.value = true
   }
   else {
@@ -31,7 +70,9 @@ async function handleSubmit() {
   try {
     const result = await createOrganization({ name: state.name, slug: state.slug })
     if (result?.data?.createOrganization?.organization) {
-      organization.value = result.data.createOrganization.organization
+      // Use fragment to access the organization data
+      const createdOrg = useFragment(CreatedOrganizationFragment, result.data.createOrganization.organization)
+      organization.value = createdOrg
       toast.add({
         title: 'Organization created',
         description: `Welcome to ${state.name}!`,

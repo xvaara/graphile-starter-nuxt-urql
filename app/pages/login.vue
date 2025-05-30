@@ -1,4 +1,7 @@
-<script setup>
+<script setup lang="ts">
+import { useMutation } from '@vue/apollo-composable'
+import { graphql } from '~/graphql'
+
 definePageMeta({
   layout: 'auth',
   public: true,
@@ -6,6 +9,7 @@ definePageMeta({
 
 const toast = useToast()
 const route = useRoute()
+const router = useRouter()
 
 const state = reactive({
   username: '',
@@ -21,42 +25,56 @@ const returnTo = computed(() => {
 
 const { refetchUser } = useAuth()
 
-const { mutate: loginMutate, loading } = useLoginMutation()
+const LoginMutation = graphql(/* GraphQL */ `
+  mutation Login($username: String!, $password: String!) {
+    login(input: { username: $username, password: $password }) {
+      user {
+        id
+        username
+        name
+      }
+    }
+  }
+`)
+
+const { mutate: login, loading } = useMutation(LoginMutation)
+
+const formError = ref<unknown>(null)
 
 async function handleSubmit() {
+  formError.value = null
   try {
-    const result = await loginMutate({
+    const result = await login({
       username: state.username,
       password: state.password,
     })
-    // console.log('Login result:', result)
-    if (result.data.login?.user) {
+    if (result?.data?.login?.user) {
       toast.add({
-        title: 'Logged in successfully',
-        description: `Welcome back, ${result.data.login.user.name}!`,
+        title: 'Welcome back!',
+        description: `You're now logged in as ${result.data.login.user.username}`,
         icon: 'i-heroicons-check-circle',
-        color: 'green',
+        color: 'success',
       })
       await refetchUser()
-      navigateTo(returnTo.value)
+      setTimeout(() => router.push(returnTo.value), 1000)
     }
     else {
+      formError.value = result?.errors?.[0]
       toast.add({
         title: 'Login failed',
-        description: result.error?.message || 'Invalid credentials',
+        description: result?.errors?.[0]?.message || 'Unknown error',
         icon: 'i-heroicons-exclamation-circle',
-        color: 'red',
+        color: 'error',
       })
     }
   }
   catch (e) {
-    console.error('Login error:', e)
-    const code = getCodeFromError(e)
+    formError.value = e
     toast.add({
       title: 'An error occurred',
-      description: `Please try again later. Error code: ${code}`,
+      description: e instanceof Error ? e.message : String(e),
       icon: 'i-heroicons-exclamation-circle',
-      color: 'red',
+      color: 'error',
     })
   }
 }
@@ -80,8 +98,6 @@ async function handleSubmit() {
             v-model="state.username"
             type="text"
             placeholder="username"
-            icon="i-heroicons-envelope"
-            :ui="{ icon: { trailing: { pointer: '' } } }"
             autocomplete="username"
             required
           />
@@ -92,8 +108,6 @@ async function handleSubmit() {
             v-model="state.password"
             type="password"
             placeholder="••••••••"
-            icon="i-heroicons-lock-closed"
-            :ui="{ icon: { trailing: { pointer: '' } } }"
             autocomplete="current-password"
             required
           />

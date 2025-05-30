@@ -1,42 +1,74 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'auth', public: true })
+import { useMutation } from '@vue/apollo-composable'
+import { graphql } from '~/graphql'
 
-const route = useRoute()
-const toast = useToast()
-
-const state = reactive({
-  id: route.query.id as string || '',
-  token: route.query.token as string || '',
+definePageMeta({
+  layout: 'auth',
+  public: true,
 })
 
-const { mutate: verifyEmail, loading } = useVerifyEmailMutation()
-const success = ref(false)
+const toast = useToast()
+const router = useRouter()
+const route = useRoute()
 
-async function handleSubmit() {
+const userEmailId = computed(() => route.query.id as string)
+const token = computed(() => route.query.token as string)
+
+const VerifyEmailMutation = graphql(/* GraphQL */ `
+  mutation VerifyEmail($userEmailId: UUID!, $token: String!) {
+    verifyEmail(input: { userEmailId: $userEmailId, token: $token }) {
+      success
+      query {
+        currentUser {
+          id
+          isVerified
+        }
+      }
+    }
+  }
+`)
+
+const { mutate: verifyEmail, loading } = useMutation(VerifyEmailMutation)
+
+const success = ref(false)
+const formError = ref<unknown>(null)
+
+// Auto-verify on page load if we have the required parameters
+onMounted(async () => {
+  if (userEmailId.value && token.value) {
+    await handleVerify()
+  }
+})
+
+async function handleVerify() {
+  formError.value = null
   try {
-    const result = await verifyEmail({ id: state.id, token: state.token })
-    if (result && result.data?.verifyEmail?.success) {
+    const result = await verifyEmail({
+      userEmailId: userEmailId.value,
+      token: token.value,
+    })
+    if (result?.data?.verifyEmail?.success) {
       success.value = true
       toast.add({
-        title: 'Email verified',
-        description: 'Your email has been verified.',
+        title: 'Email verified!',
+        description: 'Your email address has been successfully verified.',
         icon: 'i-heroicons-check-circle',
         color: 'success',
       })
-      setTimeout(() => {
-        navigateTo('/')
-      }, 3000)
+      setTimeout(() => router.push('/'), 2000)
     }
     else {
+      formError.value = result?.errors?.[0]
       toast.add({
         title: 'Verification failed',
-        description: result?.errors?.[0]?.message || 'Invalid or expired token.',
+        description: result?.errors?.[0]?.message || 'Unknown error',
         icon: 'i-heroicons-exclamation-circle',
         color: 'error',
       })
     }
   }
   catch (e) {
+    formError.value = e
     toast.add({
       title: 'An error occurred',
       description: e instanceof Error ? e.message : String(e),
@@ -52,22 +84,47 @@ async function handleSubmit() {
     <UCard>
       <template #header>
         <h1 class="text-2xl font-bold text-center">
-          Verify Email
+          Email Verification
         </h1>
         <p class="text-gray-500 text-center mt-2">
-          Enter your verification code
+          Verifying your email address...
         </p>
       </template>
-      <UForm :state="state" class="space-y-4" @submit="handleSubmit">
-        <UFormField label="Verification Token" name="token">
-          <UInput v-model="state.token" type="text" placeholder="Verification token" required />
-        </UFormField>
-        <UButton type="submit" color="primary" block :loading="loading">
-          {{ loading ? 'Verifying...' : 'Verify Email' }}
-        </UButton>
-      </UForm>
-      <div v-if="success" class="mt-4 text-green-600 text-center">
-        Email verified!
+      <div class="text-center py-8">
+        <div v-if="loading" class="space-y-4">
+          <span class="i-heroicons-arrow-path animate-spin text-4xl text-blue-500" />
+          <p>Verifying your email...</p>
+        </div>
+        <div v-else-if="success" class="space-y-4">
+          <span class="i-heroicons-check-circle text-4xl text-green-500" />
+          <p class="text-green-600">
+            Email verified successfully!
+          </p>
+          <p class="text-sm text-gray-500">
+            Redirecting you to the homepage...
+          </p>
+        </div>
+        <div v-else-if="formError" class="space-y-4">
+          <span class="i-heroicons-exclamation-circle text-4xl text-red-500" />
+          <p class="text-red-600">
+            Verification failed
+          </p>
+          <p class="text-sm text-gray-500">
+            {{ formError instanceof Error ? formError.message : String(formError) }}
+          </p>
+          <UButton color="primary" to="/login">
+            Go to Login
+          </UButton>
+        </div>
+        <div v-else class="space-y-4">
+          <span class="i-heroicons-question-mark-circle text-4xl text-gray-400" />
+          <p class="text-gray-600">
+            Missing verification parameters
+          </p>
+          <UButton color="primary" to="/login">
+            Go to Login
+          </UButton>
+        </div>
       </div>
     </UCard>
   </div>

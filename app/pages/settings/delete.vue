@@ -1,9 +1,30 @@
 <script setup lang="ts">
+import { useMutation } from '@vue/apollo-composable'
+import { graphql } from '~/graphql'
+
 definePageMeta({ public: false })
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+
+// Define the request account deletion mutation using the client preset approach
+const requestAccountDeletionMutation = graphql(`
+  mutation RequestAccountDeletion {
+    requestAccountDeletion(input: {}) {
+      success
+    }
+  }
+`)
+
+// Define the confirm account deletion mutation using the client preset approach
+const confirmAccountDeletionMutation = graphql(`
+  mutation ConfirmAccountDeletion($token: String!) {
+    confirmAccountDeletion(input: { token: $token }) {
+      success
+    }
+  }
+`)
 
 const token = computed(() => typeof route.query.token === 'string' ? route.query.token : null)
 const error = ref<string | null>(null)
@@ -20,16 +41,14 @@ function closeModal() {
   confirmOpen.value = false
 }
 
-const requestAccountDeletion = useRequestAccountDeletionMutation()
-const confirmAccountDeletion = useConfirmAccountDeletionMutation()
+const { mutate: requestAccountDeletionMutate } = useMutation(requestAccountDeletionMutation)
+const { mutate: confirmAccountDeletionMutate } = useMutation(confirmAccountDeletionMutation)
 
 async function doIt() {
   error.value = null
   doingIt.value = true
   try {
-    const { mutate } = requestAccountDeletion
-
-    const result = await mutate({})
+    const result = await requestAccountDeletionMutate({})
 
     if (!result?.data?.requestAccountDeletion?.success)
       throw new Error('Requesting deletion failed')
@@ -49,8 +68,7 @@ async function confirmDeletion() {
   error.value = null
   deleting.value = true
   try {
-    const { mutate } = confirmAccountDeletion
-    const result = await mutate({ token: token.value })
+    const result = await confirmAccountDeletionMutate({ token: token.value })
 
     if (!result?.data?.confirmAccountDeletion?.success)
       throw new Error('Account deletion failed')

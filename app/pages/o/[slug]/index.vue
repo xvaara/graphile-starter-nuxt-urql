@@ -1,12 +1,59 @@
 <script setup lang="ts">
+import { useQuery } from '@vue/apollo-composable'
+import { SharedLayoutQueryFragment } from '~/composables/useAuth'
+import { graphql, useFragment } from '~/graphql'
+
 const route = useRoute()
 const slug = computed(() => route.params.slug as string)
-const { result, loading, error } = useOrganizationPageQuery({ slug: slug.value })
+
+// Define the OrganizationPage_Organization fragment
+const OrganizationPageOrganizationFragment = graphql(`
+  fragment OrganizationPage_Organization on Organization {
+    id
+    name
+    slug
+    currentUserIsOwner
+    currentUserIsBillingContact
+  }
+`)
+
+// Define the OrganizationPage_Query fragment
+const OrganizationPageQueryFragment = graphql(`
+  fragment OrganizationPage_Query on Query {
+    ...SharedLayout_Query
+    organizationBySlug(slug: $slug) {
+      id
+      ...OrganizationPage_Organization
+    }
+  }
+`)
+
+// Define the OrganizationPage query
+const OrganizationPageQuery = graphql(`
+  query OrganizationPage($slug: String!) {
+    ...OrganizationPage_Query
+  }
+`)
+
+const { result, loading, error } = useQuery(OrganizationPageQuery, { slug: slug.value })
+
+// Use fragment masking to access the query data and then the organization data
+const queryData = computed(() => {
+  if (!result.value)
+    return null
+  return useFragment(OrganizationPageQueryFragment, result.value)
+})
+
+const organization = computed(() => {
+  if (!queryData.value?.organizationBySlug)
+    return null
+  return useFragment(OrganizationPageOrganizationFragment, queryData.value.organizationBySlug)
+})
 
 // Throw 404 error if organization not found, but only after the query completes
 watchEffect(() => {
   console.log('onResult', result.value, loading.value, error.value)
-  if (!loading.value && result.value && !result.value.organizationBySlug) {
+  if (!loading.value && result.value && !queryData.value?.organizationBySlug) {
     throw createError({
       statusCode: 404,
       statusMessage: 'Organization Not Found',
@@ -22,7 +69,7 @@ watchEffect(() => {
     <UCard>
       <template #header>
         <h1 class="text-2xl font-bold text-center">
-          {{ result?.organizationBySlug?.name || slug }}
+          {{ organization?.name || slug }}
         </h1>
       </template>
       <div v-if="loading" class="text-center py-8">
@@ -37,7 +84,7 @@ watchEffect(() => {
             Dashboard
           </div>
           <UButton
-            v-if="result?.organizationBySlug?.currentUserIsOwner"
+            v-if="organization?.currentUserIsOwner"
             color="primary"
             class="mt-4"
             :to="`/o/${slug}/settings`"

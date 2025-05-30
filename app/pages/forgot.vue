@@ -1,41 +1,51 @@
 <script setup lang="ts">
+import { useMutation } from '@vue/apollo-composable'
+import { graphql } from '~/graphql'
+
 definePageMeta({ layout: 'auth', public: true })
 
 const toast = useToast()
 const state = reactive({ email: '' })
-const { mutate: forgotPassword, loading } = useForgotPasswordMutation()
+
+const ForgotPasswordMutation = graphql(/* GraphQL */ `
+  mutation ForgotPassword($email: String!) {
+    forgotPassword(input: { email: $email }) {
+      clientMutationId
+    }
+  }
+`)
+
+const { mutate: forgotPassword, loading } = useMutation(ForgotPasswordMutation)
+const formError = ref<unknown>(null)
 const success = ref(false)
 
 async function handleSubmit() {
+  formError.value = null
   try {
-    const result = await forgotPassword({ email: state.email })
-    if (!result) {
-      toast.add({
-        title: 'An error occurred',
-        description: 'Please try again later',
-        icon: 'i-heroicons-exclamation-circle',
-        color: 'error',
-      })
-    }
-    else if (!result.errors) {
+    const result = await forgotPassword({
+      email: state.email,
+    })
+    if (result?.data?.forgotPassword) {
       success.value = true
       toast.add({
-        title: 'Check your email',
-        description: `We've sent a password reset link to ${state.email}.`,
-        icon: 'i-heroicons-envelope',
+        title: 'Reset email sent',
+        description: 'Please check your email for password reset instructions.',
+        icon: 'i-heroicons-check-circle',
         color: 'success',
       })
     }
     else {
+      formError.value = result?.errors?.[0]
       toast.add({
-        title: 'Request failed',
-        description: result?.errors?.[0]?.message || 'An error occurred',
+        title: 'Reset failed',
+        description: result?.errors?.[0]?.message || 'Unknown error',
         icon: 'i-heroicons-exclamation-circle',
         color: 'error',
       })
     }
   }
-  catch (e: unknown) {
+  catch (e) {
+    formError.value = e
     toast.add({
       title: 'An error occurred',
       description: e instanceof Error ? e.message : String(e),

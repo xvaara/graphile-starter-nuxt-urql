@@ -1,54 +1,79 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'auth', public: true })
+import { useMutation } from '@vue/apollo-composable'
+import { graphql } from '~/graphql'
 
-const route = useRoute()
-const router = useRouter()
-const toast = useToast()
-
-const state = reactive({
-  userId: route.query.user_id as string || '',
-  token: route.query.token as string || '',
-  password: '',
-  confirm: '',
+definePageMeta({
+  layout: 'auth',
+  public: true,
 })
 
-const { mutate: resetPassword, loading } = useResetPasswordMutation()
-const success = ref(false)
+const toast = useToast()
+const router = useRouter()
+const route = useRoute()
 
-const passwordsMatch = computed(() => state.password && state.password === state.confirm)
+const userId = computed(() => route.query.userId as string)
+const resetToken = computed(() => route.query.token as string)
+
+const state = reactive({
+  newPassword: '',
+  confirmPassword: '',
+})
+
+const ResetPasswordMutation = graphql(/* GraphQL */ `
+  mutation ResetPassword(
+    $userId: UUID!
+    $resetToken: String!
+    $newPassword: String!
+  ) {
+    resetPassword(
+      input: {
+        userId: $userId
+        resetToken: $resetToken
+        newPassword: $newPassword
+      }
+    ) {
+      success
+    }
+  }
+`)
+
+const { mutate: resetPassword, loading } = useMutation(ResetPasswordMutation)
+
+const formError = ref<unknown>(null)
 
 async function handleSubmit() {
-  if (!passwordsMatch.value) {
-    toast.add({
-      title: 'Passwords do not match',
-      description: 'Please make sure your passwords match.',
-      icon: 'i-heroicons-exclamation-circle',
-      color: 'error',
-    })
+  formError.value = null
+  if (state.newPassword !== state.confirmPassword) {
+    formError.value = new Error('Passwords do not match')
     return
   }
   try {
-    const result = await resetPassword({ userId: state.userId, token: state.token, password: state.password })
-    if (result && result.data?.resetPassword?.success) {
-      success.value = true
+    const result = await resetPassword({
+      userId: userId.value,
+      resetToken: resetToken.value,
+      newPassword: state.newPassword,
+    })
+    if (result?.data?.resetPassword?.success) {
       toast.add({
-        title: 'Password reset',
-        description: 'Your password has been reset. You can now log in.',
+        title: 'Password reset successful',
+        description: 'Your password has been reset. You can now log in with your new password.',
         icon: 'i-heroicons-check-circle',
         color: 'success',
       })
-      setTimeout(() => router.push('/login'), 2000)
+      setTimeout(() => router.push('/login'), 1000)
     }
     else {
+      formError.value = result?.errors?.[0]
       toast.add({
         title: 'Reset failed',
-        description: result?.errors?.[0]?.message || 'Invalid or expired token.',
+        description: result?.errors?.[0]?.message || 'Unknown error',
         icon: 'i-heroicons-exclamation-circle',
         color: 'error',
       })
     }
   }
   catch (e) {
+    formError.value = e
     toast.add({
       title: 'An error occurred',
       description: e instanceof Error ? e.message : String(e),
@@ -71,21 +96,18 @@ async function handleSubmit() {
         </p>
       </template>
       <UForm :state="state" class="space-y-4" @submit="handleSubmit">
-        <UFormField label="Reset Token" name="token">
-          <UInput v-model="state.token" type="text" placeholder="Reset token" required />
+        <UFormField label="New Password" name="newPassword">
+          <UInput v-model="state.newPassword" type="password" placeholder="••••••••" autocomplete="new-password" required />
         </UFormField>
-        <UFormField label="New Password" name="password">
-          <UInput v-model="state.password" type="password" placeholder="••••••••" autocomplete="new-password" required />
-        </UFormField>
-        <UFormField label="Confirm Password" name="confirm">
-          <UInput v-model="state.confirm" type="password" placeholder="••••••••" autocomplete="new-password" required />
+        <UFormField label="Confirm Password" name="confirmPassword">
+          <UInput v-model="state.confirmPassword" type="password" placeholder="••••••••" autocomplete="new-password" required />
         </UFormField>
         <UButton type="submit" color="primary" block :loading="loading">
           {{ loading ? 'Resetting...' : 'Reset Password' }}
         </UButton>
       </UForm>
-      <div v-if="success" class="mt-4 text-green-600 text-center">
-        Password reset! Redirecting to login...
+      <div v-if="formError" class="mt-4 text-red-600 text-center">
+        {{ formError instanceof Error ? formError.message : String(formError) }}
       </div>
     </UCard>
   </div>

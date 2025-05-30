@@ -1,28 +1,95 @@
 <script setup lang="ts">
+import { useMutation, useQuery } from '@vue/apollo-composable'
+import { graphql } from '~/graphql'
+
 definePageMeta({ public: false })
+const toast = useToast()
 
-const { loading, error } = await useSettingsPasswordQuery()
-const oldPassword = ref('')
-const newPassword = ref('')
-const changeError = ref('')
-const changeSuccess = ref(false)
-const changing = ref(false)
+const SettingsPasswordQuery = graphql(/* GraphQL */ `
+  query SettingsPassword {
+    currentUser {
+      id
+      hasPassword
+      userEmails(first: 50) {
+        nodes {
+          id
+          email
+        }
+      }
+    }
+  }
+`)
 
-const { mutate: changePasswordMutation } = useChangePasswordMutation()
-async function changePassword() {
-  changeError.value = ''
-  changeSuccess.value = false
-  changing.value = true
+const ChangePasswordMutation = graphql(/* GraphQL */ `
+  mutation ChangePassword($oldPassword: String!, $newPassword: String!) {
+    changePassword(input: { oldPassword: $oldPassword, newPassword: $newPassword }) {
+      success
+    }
+  }
+`)
+
+const { result: _result, loading, error: _error } = useQuery(SettingsPasswordQuery)
+const { mutate: changePassword, loading: changing } = useMutation(ChangePasswordMutation)
+
+const state = reactive({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+})
+
+const formError = ref<unknown>(null)
+
+async function handleSubmit() {
+  formError.value = null
+
+  if (state.newPassword !== state.confirmPassword) {
+    formError.value = new Error('New passwords do not match')
+    return
+  }
+
+  if (state.newPassword.length < 8) {
+    formError.value = new Error('Password must be at least 8 characters long')
+    return
+  }
+
   try {
-    await changePasswordMutation({ oldPassword: oldPassword.value, newPassword: newPassword.value })
-    changeSuccess.value = true
-    oldPassword.value = ''
-    newPassword.value = ''
+    const response = await changePassword({
+      oldPassword: state.oldPassword,
+      newPassword: state.newPassword,
+    })
+
+    if (response?.data?.changePassword?.success) {
+      toast.add({
+        title: 'Password changed',
+        description: 'Your password has been successfully updated.',
+        icon: 'i-heroicons-check-circle',
+        color: 'success',
+      })
+
+      // Clear the form
+      state.oldPassword = ''
+      state.newPassword = ''
+      state.confirmPassword = ''
+    }
+    else {
+      formError.value = response?.errors?.[0] || new Error('Failed to change password')
+      toast.add({
+        title: 'Password change failed',
+        description: response?.errors?.[0]?.message || 'Unknown error',
+        icon: 'i-heroicons-exclamation-circle',
+        color: 'error',
+      })
+    }
   }
-  catch (e: Error | unknown) {
-    changeError.value = e instanceof Error ? e.message : String(e)
+  catch (e) {
+    formError.value = e
+    toast.add({
+      title: 'An error occurred',
+      description: e instanceof Error ? e.message : String(e),
+      icon: 'i-heroicons-exclamation-circle',
+      color: 'error',
+    })
   }
-  changing.value = false
 }
 </script>
 
@@ -37,28 +104,28 @@ async function changePassword() {
       <div v-if="loading">
         Loading...
       </div>
-      <div v-else-if="error">
-        Error loading security settings
+      <div v-else-if="formError" class="mb-4">
+        <UAlert color="error">
+          <template #title>
+            Error
+          </template>
+          {{ formError instanceof Error ? formError.message : String(formError) }}
+        </UAlert>
       </div>
-      <form v-else class="space-y-4" @submit.prevent="changePassword">
-        <div>
-          <label class="block font-medium mb-1">Old passphrase</label>
-          <UInput v-model="oldPassword" type="password" required />
-        </div>
-        <div>
-          <label class="block font-medium mb-1">New passphrase</label>
-          <UInput v-model="newPassword" type="password" required />
-        </div>
-        <div v-if="changeError" class="text-red-500">
-          {{ changeError }}
-        </div>
-        <div v-if="changeSuccess" class="text-green-600">
-          Password changed!
-        </div>
+      <UForm v-if="!loading" :state="state" class="space-y-4" @submit="handleSubmit">
+        <UFormField label="Old passphrase" name="oldPassword">
+          <UInput v-model="state.oldPassword" type="password" required />
+        </UFormField>
+        <UFormField label="New passphrase" name="newPassword">
+          <UInput v-model="state.newPassword" type="password" required />
+        </UFormField>
+        <UFormField label="Confirm passphrase" name="confirmPassword">
+          <UInput v-model="state.confirmPassword" type="password" required />
+        </UFormField>
         <UButton type="submit" color="primary" :loading="changing">
-          Change Passphrase
+          {{ changing ? 'Changing...' : 'Change Passphrase' }}
         </UButton>
-      </form>
+      </UForm>
     </UCard>
   </div>
 </template>

@@ -1,16 +1,58 @@
 <script setup lang="ts">
-const { user } = await useAsyncAuth()
+import { useMutation } from '@vue/apollo-composable'
+import { useAsyncQuery } from '~/composables/useAsyncQuery'
+import { graphql, useFragment } from '~/graphql'
 
 definePageMeta({
   name: 'Settings-profile-index',
 })
 
-const form = reactive({
-  name: user.value?.name || '',
-  username: user.value?.username || '',
+const ProfileSettingsFormUserFragment = graphql(`
+  fragment ProfileSettingsForm_User on User {
+    id
+    name
+    username
+  }
+`)
+
+const SettingsProfileQuery = graphql(`
+  query SettingsProfile {
+    currentUser {
+      id
+      ...ProfileSettingsForm_User
+    }
+  }
+`)
+
+// Define the update user mutation using the client preset approach
+const updateUserMutation = graphql(`
+  mutation UpdateUser($id: UUID!, $patch: UserPatch!) {
+    updateUser(input: { id: $id, patch: $patch }) {
+      clientMutationId
+      user {
+        id
+        name
+        username
+      }
+    }
+  }
+`)
+
+const { result, error, promise } = useAsyncQuery(SettingsProfileQuery)
+
+const data = await promise
+const user = computed(() => {
+  if (!result.value?.currentUser)
+    return null
+  return useFragment(ProfileSettingsFormUserFragment, result.value.currentUser)
 })
 
-const { mutate: updateProfile, error } = useUpdateUserMutation()
+const form = reactive({
+  name: data.currentUser ? useFragment(ProfileSettingsFormUserFragment, data.currentUser).name || '' : '',
+  username: data.currentUser ? useFragment(ProfileSettingsFormUserFragment, data.currentUser).username || '' : '',
+})
+
+const { mutate: updateProfile } = useMutation(updateUserMutation)
 
 async function handleSubmit() {
   try {
