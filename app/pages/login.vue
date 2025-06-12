@@ -23,7 +23,7 @@ const returnTo = computed(() => {
   return to?.startsWith('/') ? to : '/'
 })
 
-const { refetchUser } = useAuth()
+const { restartSession } = useAuth()
 
 const LoginMutation = graphql(/* GraphQL */ `
   mutation Login($username: String!, $password: String!) {
@@ -55,7 +55,7 @@ async function handleSubmit() {
         icon: 'i-heroicons-check-circle',
         color: 'success',
       })
-      await refetchUser()
+      await restartSession()
       setTimeout(() => router.push(returnTo.value), 1000)
     }
     else {
@@ -70,6 +70,7 @@ async function handleSubmit() {
   }
   catch (e) {
     formError.value = e
+    console.error(e)
     toast.add({
       title: 'An error occurred',
       description: e instanceof Error ? e.message : String(e),

@@ -1,6 +1,5 @@
 import type { FetchPolicy, WatchQueryFetchPolicy } from '@apollo/client/core/watchQueryOptions'
 import type { DeepReadonly } from 'vue'
-import type { FragmentType } from '~/graphql'
 import type { SharedLayout_UserFragment } from '~/graphql/graphql'
 import { useQuery } from '@vue/apollo-composable'
 import { useFragment } from '~/graphql'

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useMutation, useQuery } from '@vue/apollo-composable'
-import { SharedLayoutQueryFragment } from '~/composables/useAuth'
 import { graphql } from '~/graphql'
 
 const route = useRoute()

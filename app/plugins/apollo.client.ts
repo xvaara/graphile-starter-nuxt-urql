@@ -49,6 +49,8 @@ export default defineNuxtPlugin((nuxt) => {
   try {
     wsClient = createWSClient({
       url: `${rootUrl}/api/graphql/ws`,
+      shouldRetry: () => true,
+      keepAlive: 10000,
       connectionParams: {
         headers: {
           ...headers,

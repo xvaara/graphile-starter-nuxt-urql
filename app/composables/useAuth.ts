@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useSubscription } from '@vue/apollo-composable'
+import { useQuery, useSubscription } from '@vue/apollo-composable'
 import { graphql, useFragment } from '~/graphql'
 
 // Define the shared layout user fragment (matching SharedLayout_User in GraphQL files)
@@ -97,15 +97,16 @@ export function useAuth() {
   })
 
   function subscribe() {
-    const { onResult: onCurrentUserUpdated } = useSubscription(CurrentUserUpdatedSubscription, null, toRef(() => ({ enabled: !!user.value })))
+    const { onError, onResult: onCurrentUserUpdated } = useSubscription(CurrentUserUpdatedSubscription, null, { enabled: computed(() => !!user.value) })
+
     onCurrentUserUpdated(({ data }) => {
       if (data?.currentUserUpdated?.user) {
         user.value = useFragment(SharedLayoutUserFragment, data.currentUserUpdated.user)
       }
     })
-  }
-  if (import.meta.client) {
-    callOnce('auth:subscribe', subscribe)
+    onError((error) => {
+      console.error('error subscribing to current user updates', error)
+    })
   }
   function logout() {
     return new Promise((resolve) => {
@@ -129,7 +130,8 @@ export function useAuth() {
     })
   }
 
-  async function refetchUser() {
+  async function restartSession() {
+    nuxtApp.$apolloWSClient.terminate()
     const data = await refetch()
     if (data?.data) {
       const queryFragment = useFragment(SharedLayoutQueryFragment, data.data)
@@ -142,7 +144,7 @@ export function useAuth() {
     isAuthenticated: computed(() => !!user.value),
     user: readonly(user),
     logout,
-    refetchUser,
+    restartSession,
     subscribe,
   }
 }
